@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Dynamic Ticker</title>
+  <style>
+    body {
+      margin: 0;
+      background: red;
+      color: white;
+      font-family: Arial, sans-serif;
+    }
+
+    #ticker {
+      display: flex;
+      align-items: center;
+      overflow: hidden;
+      white-space: nowrap;
+      padding: 30px;
+      box-sizing: border-box;
+      font-size: 32px;
+    }
+
+    #label {
+      font-weight: bold;
+      padding-right: 40px;
+      flex-shrink: 0;
+      text-transform: uppercase;
+    }
+
+    #scroll-container {
+      overflow: hidden;
+      flex: 1;
+    }
+
+    #headlines {
+      display: inline-block;
+      padding-left: 100%;
+      text-transform: uppercase;
+    }
+
+    .headline {
+      margin-right: 50px;
+      margin-left: 50px;
+    }
+
+
+    @keyframes scroll {
+      0% {
+        transform: translateX(0%);
+      }
+
+      100% {
+        transform: translateX(-100%);
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div id="ticker">
+    <div id="label">Latest News:</div>
+    <div id="scroll-container">
+      <span id="headlines">Loading headlines...</span>
+    </div>
+  </div>
+
+  <script>
+    const rssUrl = "https://sbr.com.sg/rss.xml?send_story_magazine_social=yes&send_to_social=yes";
+
+    async function loadHeadlines() {
+      try {
+        const response = await fetch(rssUrl);
+        const text = await response.text();
+        const parser = new DOMParser();
+        const xml = parser.parseFromString(text, "application/xml");
+        const items = xml.querySelectorAll("item");
+
+        const titles = Array.from(items)
+          .slice(0, 10) // only take latest 10 items
+          .map(item => item.querySelector("title").textContent)
+          .join(" | ");
+
+        const headlines = document.getElementById("headlines");
+        headlines.innerHTML = Array.from(items)
+          .slice(0, 10)
+          .map(item => `<span class="headline">${item.querySelector("title").textContent}</span>`)
+          .join("|");
+
+        // Dynamically set animation duration
+        setDynamicAnimation(headlines);
+      } catch (err) {
+        console.error("Error loading RSS feed:", err);
+        document.getElementById("headlines").textContent = "Failed to load headlines.";
+      }
+    }
+
+    // Function to set scroll speed dynamically
+    function setDynamicAnimation(headlines) {
+      const container = document.getElementById("scroll-container");
+      const contentWidth = headlines.offsetWidth;
+      const containerWidth = container.offsetWidth;
+
+      // Speed in pixels per second (adjust as needed)
+      const speed = 100; // 100px per second
+      const duration = (contentWidth + containerWidth) / speed;
+
+      // Apply CSS animation dynamically
+      headlines.style.animation = `scroll ${duration}s linear infinite`;
+    }
+
+    loadHeadlines();
+
+    // Refresh every 10 minutes
+    setInterval(loadHeadlines, 10 * 60 * 1000);
+  </script>
+
+</body>
+
+</html>

@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Vimeo Showcase Latest 4 Videos</title>
+  <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      background: white;
+      height: 100vh;
+      width: 100vw;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-family: Arial, sans-serif;
+    }
+
+    #video-container {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      grid-template-rows: repeat(2, auto);
+      gap: 20px;
+      width: 90vw;
+      height: auto;
+    }
+
+    .video-box {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
+    }
+
+    iframe {
+      width: 100%;
+      aspect-ratio: 16 / 9; 
+      border: 0;
+      border-radius: 8px;
+    }
+
+    .title {
+      margin-top: 8px;
+      font-size: 16px;
+      font-weight: bold;
+      text-align: center;
+      color: black;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="video-container"></div>
+
+  <script>
+    const ACCESS_TOKEN = "3c0aa4e804c84a2e87437c8239507578"; 
+    const SHOWCASE_ID = "11981904";   
+
+    const container = document.getElementById('video-container');
+
+    fetch(`https://api.vimeo.com/albums/${SHOWCASE_ID}/videos?per_page=4`, {
+      headers: { "Authorization": `Bearer ${ACCESS_TOKEN}` }
+    })
+    .then(res => res.json())
+    .then(data => {
+      const videos = data.data.slice(0,4);
+
+      videos.forEach(video => {
+        const videoId = video.uri.split('/')[2];
+        const title = video.name;
+
+        const box = document.createElement('div');
+        box.className = "video-box";
+
+        const iframe = document.createElement('iframe');
+        iframe.src = `https://player.vimeo.com/video/${videoId}?autoplay=1&muted=1&loop=1&background=1`;
+        iframe.allow = "autoplay; fullscreen";
+
+        const titleDiv = document.createElement('div');
+        titleDiv.className = "title";
+        titleDiv.textContent = title;
+
+        box.appendChild(iframe);
+        box.appendChild(titleDiv);
+        container.appendChild(box);
+      });
+    })
+    .catch(err => console.error("Error fetching Vimeo videos:", err));
+  </script>
+
+</body>
+</html>

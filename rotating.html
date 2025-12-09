@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Fullscreen Rotating Vimeo Videos</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: black;
+      height: 100vh;
+      width: 100vw;
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    #video-player iframe {
+      width: 100vw;
+      height: 100vh;
+      border: 0;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div id="video-player"></div>
+
+  <script>
+    const ACCESS_TOKEN = "3c0aa4e804c84a2e87437c8239507578";
+    const SHOWCASE_ID = "11981904";
+
+    const DISPLAY_TIME = 20; // Seconds each video stays on screen
+
+    const player = document.getElementById("video-player");
+    let videos = [];
+    let currentIndex = 0;
+
+    // Load Vimeo Showcase videos
+    fetch(`https://api.vimeo.com/albums/${SHOWCASE_ID}/videos?per_page=20`, {
+      headers: { Authorization: `Bearer ${ACCESS_TOKEN}` }
+    })
+    .then(res => res.json())
+    .then(data => {
+      videos = data.data;
+      if (videos.length === 0) return;
+
+      playVideo(); 
+      setInterval(playNextVideo, DISPLAY_TIME * 1000);
+    })
+    .catch(err => console.error("Error fetching videos:", err));
+
+    // Show the current video
+    function playVideo() {
+      const video = videos[currentIndex];
+      const videoId = video.uri.split("/")[2];
+
+      player.innerHTML = `
+        <iframe 
+          src="https://player.vimeo.com/video/${videoId}?autoplay=1&muted=1&loop=0&background=1"
+          allow="autoplay; fullscreen">
+        </iframe>`;
+    }
+
+    // Move to next video
+    function playNextVideo() {
+      currentIndex = (currentIndex + 1) % videos.length;
+      playVideo();
+    }
+  </script>
+
+</body>
+</html>
