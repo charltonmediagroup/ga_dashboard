@@ -4,13 +4,18 @@
 <head>
   <meta charset="UTF-8">
   <title>Dynamic Ticker</title>
+  <link rel="stylesheet" href="fonts.css">
   <style>
     body {
       margin: 0;
       padding: 0;
       background: red;
       color: white;
-      font-family: "DIN Alternate", "DIN Condensed", "Arial Narrow", Arial, sans-serif;
+      font-family: "DIN", "DIN Condensed", "DIN Expanded", "Arial Narrow", Arial, sans-serif;
+      height: 100vh;
+      display: flex;            /* enables Flexbox */
+      justify-content: center;  /* horizontal centering */
+      align-items: center; 
     }
 
     #ticker {
@@ -18,7 +23,7 @@
       align-items: center;
       overflow: hidden;
       white-space: nowrap;
-      padding: 10px 15px;
+      padding: 1px 15px;
       /* reduced padding to push text near edge */
       box-sizing: border-box;
       font-size: 32px;
@@ -45,6 +50,7 @@
       /* start off-screen for scrolling */
       text-transform: uppercase;
       /* make headlines capitalized */
+      font-weight: bold;
     }
 
     .headline {
