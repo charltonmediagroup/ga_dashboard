@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="UTF-8">
-  <title>Dynamic Ticker</title>
+  <title>Dynamic Ticker 2</title>
   <link rel="stylesheet" href="fonts.css">
   <style>
     html, body {
@@ -14,7 +14,7 @@
     body {
       margin: 0;
       padding: 0;
-      background: red;
+      background: rgb(255, 255, 255);
       color: white;
       font-family: "DIN", "DIN Condensed", "DIN Expanded", "Arial Narrow", Arial, sans-serif;
       height: 100vh;
@@ -28,18 +28,19 @@
       align-items: center;
       overflow: hidden;
       white-space: nowrap;
-      padding: 1px 15px;
+      padding: 10px 15px;
       box-sizing: border-box;
-      font-size: 32px;
+      font-size: 24px;
       width: 100vw;
+      box-shadow: 0 0 5px rgba(0,0,0,0.5);
     }
 
     #label {
       font-weight: bold;
+      font-style: italic;
       padding-right: 20px;
       flex-shrink: 0;
       text-transform: uppercase;
-      text-shadow: 0 0 5px rgba(0, 0, 0, 0.501);
     }
 
     #scroll-container {
@@ -98,7 +99,7 @@
         rssUrl = (config[code] && config[code].rssUrl) ? config[code].rssUrl : (config["sbr"] && config["sbr"].rssUrl) ? config["sbr"].rssUrl : null;
         
         const site = (config[code]) ? config[code] : config["sbr"];
-        document.body.style.backgroundColor = site.color;
+        document.body.style.color = site.color;
         
         if (!rssUrl) {
           throw new Error("No rssUrl found for code '" + code + "' and no fallback 'sbr' entry in data.json");
