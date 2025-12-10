@@ -137,7 +137,7 @@
     function loadVideos() {
       console.log("Fetching videos from Vimeo showcase ID:", showcase_id);
 
-      fetch(`https://api.vimeo.com/albums/${showcase_id}/videos?per_page=20&sort=manual`, {
+      fetch(`https://api.vimeo.com/albums/${showcase_id}/videos?per_page=20`, {
         headers: { Authorization: `Bearer ${ACCESS_TOKEN}` }
       })
         .then(res => res.json())
