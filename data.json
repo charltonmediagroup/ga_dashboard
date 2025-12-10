@@ -1,0 +1,52 @@
+{
+    "sbr":
+    {
+        "name": "Singapore Business Review",
+        "url": "https://sbr.com.sg",
+        "rssUrl": "https://sbr.com.sg/rss.xml?send_story_magazine_social=yes&send_to_social=yes",
+        "color": "#FF0000"
+    },
+    "hkb":
+    {
+        "name": "Hong Kong Business",
+        "url": "https://hongkongbusiness.hk",
+        "rssUrl": "https://hongkongbusiness.hk/rss.xml?send_story_magazine_social=yes&send_to_social=yes",
+        "color": "#FD0C1C"
+    },
+    "abf":
+    {
+        "name": "Asian Banking and Finance",
+        "url": "https://asianbankingandfinance.net/",
+        "rssUrl": "https://asianbankingandfinance.net/rss.xml?send_story_magazine_social=yes&send_to_social=yes",
+        "color": "#000000"
+    },
+    "ia":
+    {
+        "name": "Insurance Asia",
+        "url": "https://insuranceasia.com/",
+        "rssUrl": "https://insuranceasia.com/rss.xml?send_story_magazine_social=yes&send_to_social=yes",
+        "color": "#D41721"
+    },
+    "ra":
+    {
+        "name": "Retail Asia",
+        "url": "https://retailasia.com/",
+        "rssUrl": "https://retailasia.com/rss.xml?send_story_magazine_social=yes&send_to_social=yes",
+        "color": "#3D075F"
+    },
+    "hca":
+    {
+        "name": "Healthcare Asia",
+        "url": "https://healthcareasiamagazine.com/",
+        "rssUrl": "https://healthcareasiamagazine.com/rss.xml?send_story_magazine_social=yes&send_to_social=yes",
+        "color": "#EF141A"
+    },
+    "ap":
+    {
+        "name": "Asian Power",
+        "url": "https://asian-power.com/",
+        "rssUrl": "https://asian-power.com/rss.xml?send_story_magazine_social=yes&send_to_social=yes",
+        "color": "#F48222"
+    }
+}
+

@@ -6,6 +6,11 @@
   <title>Dynamic Ticker</title>
   <link rel="stylesheet" href="fonts.css">
   <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+    }
+
     body {
       margin: 0;
       padding: 0;
@@ -15,7 +20,7 @@
       height: 100vh;
       display: flex;            /* enables Flexbox */
       justify-content: center;  /* horizontal centering */
-      align-items: center; 
+      align-items: center;      /* vertical centering */
     }
 
     #ticker {
@@ -24,15 +29,14 @@
       overflow: hidden;
       white-space: nowrap;
       padding: 1px 15px;
-      /* reduced padding to push text near edge */
       box-sizing: border-box;
       font-size: 32px;
+      width: 100vw;
     }
 
     #label {
       font-weight: bold;
       padding-right: 20px;
-      /* smaller gap */
       flex-shrink: 0;
       text-transform: uppercase;
     }
@@ -41,32 +45,20 @@
       overflow: hidden;
       flex: 1;
       margin-left: 5px;
-      /* reduce gap further */
+      position: relative;
     }
 
     #headlines {
       display: inline-block;
-      padding-left: 100%;
-      /* start off-screen for scrolling */
+      white-space: nowrap;
       text-transform: uppercase;
-      /* make headlines capitalized */
       font-weight: bold;
+      /* animation applied dynamically via JS */
     }
 
     .headline {
-      margin-right: 40px;
-      margin-left: 40px;
-      text-transform: uppercase;
-    }
-
-    @keyframes scroll {
-      0% {
-        transform: translateX(0%);
-      }
-
-      100% {
-        transform: translateX(-100%);
-      }
+      display: inline-block;
+      margin: 0 60px;
     }
   </style>
 </head>
@@ -76,58 +68,163 @@
   <div id="ticker">
     <div id="label">Latest News:</div>
     <div id="scroll-container">
-      <span id="headlines">Loading headlines...</span>
+      <span id="headlines">...</span>
     </div>
   </div>
 
   <script>
-    const rssUrl = "https://sbr.com.sg/rss.xml?send_story_magazine_social=yes&send_to_social=yes";
+    // read ?code= from URL (default to "sbr")
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get("code") || "sbr";
 
+    let rssUrl = null;          // will be set after loading data.json
+    let refreshTimer = null;
+    const REFRESH_MS = 10 * 60 * 1000; // 10 minutes
+
+    // Load config and start
+    fetch("data.json")
+      .then(response => {
+        if (!response.ok) throw new Error("Failed to load data.json: " + response.status);
+        return response.json();
+      })
+      .then(config => {
+        if (!config) throw new Error("data.json is empty or invalid JSON");
+
+        // pick rssUrl from config using code, fallback to sbr
+        rssUrl = (config[code] && config[code].rssUrl) ? config[code].rssUrl : (config["sbr"] && config["sbr"].rssUrl) ? config["sbr"].rssUrl : null;
+        
+        const site = (config[code]) ? config[code] : config["sbr"];
+        document.body.style.backgroundColor = site.color;
+        
+        if (!rssUrl) {
+          throw new Error("No rssUrl found for code '" + code + "' and no fallback 'sbr' entry in data.json");
+        }
+
+        console.log("Using RSS:", rssUrl);
+
+        // initial load and schedule refresh
+        loadHeadlines();
+        if (refreshTimer) clearInterval(refreshTimer);
+        refreshTimer = setInterval(loadHeadlines, REFRESH_MS);
+      })
+      .catch(err => {
+        console.error(err);
+        document.getElementById("headlines").textContent = "Failed to load configuration.";
+      });
+
+    // fetch RSS, parse, render, and setup scrolling animation
     async function loadHeadlines() {
+      if (!rssUrl) {
+        console.warn("rssUrl not set yet; skipping loadHeadlines()");
+        return;
+      }
+
       try {
         const response = await fetch(rssUrl);
-        const text = await response.text();
+        if (!response.ok) throw new Error("Failed to fetch RSS: " + response.status);
+        const xmlText = await response.text();
         const parser = new DOMParser();
-        const xml = parser.parseFromString(text, "application/xml");
+        const xml = parser.parseFromString(xmlText, "application/xml");
+
+        // basic error check for XML parse errors
+        const parsererror = xml.querySelector("parsererror");
+        if (parsererror) {
+          console.error("XML parse error:", parsererror.textContent);
+          document.getElementById("headlines").textContent = "Invalid RSS feed.";
+          return;
+        }
+
         const items = xml.querySelectorAll("item");
+        if (!items.length) {
+          // some feeds use entry/title instead (atom). fallback attempt:
+          const entries = xml.querySelectorAll("entry");
+          if (entries.length) {
+            renderHeadlines(Array.from(entries).map(e => {
+              const t = e.querySelector("title");
+              return t ? t.textContent.trim() : "Untitled";
+            }));
+          } else {
+            document.getElementById("headlines").textContent = "No headlines found.";
+          }
+          return;
+        }
 
-        const titles = Array.from(items)
-          .slice(0, 10) // only take latest 10 items
-          .map(item => item.querySelector("title").textContent)
-          .join(" | ");
+        // take up to 10 titles
+        const titles = Array.from(items).slice(0, 10).map(i => {
+          const t = i.querySelector("title");
+          return t ? t.textContent.trim() : "Untitled";
+        });
 
-        const headlines = document.getElementById("headlines");
-        headlines.innerHTML = Array.from(items)
-          .slice(0, 10)
-          .map(item => `<span class="headline">${item.querySelector("title").textContent}</span>`)
-          .join("|");
-
-        // Dynamically set animation duration
-        setDynamicAnimation(headlines);
+        renderHeadlines(titles);
       } catch (err) {
         console.error("Error loading RSS feed:", err);
         document.getElementById("headlines").textContent = "Failed to load headlines.";
       }
     }
 
-    // Function to set scroll speed dynamically
-    function setDynamicAnimation(headlines) {
-      const container = document.getElementById("scroll-container");
-      const contentWidth = headlines.offsetWidth;
-      const containerWidth = container.offsetWidth;
+    // render headlines and create a pixel-accurate scroll animation
+    function renderHeadlines(titlesArray) {
+      const headlines = document.getElementById("headlines");
+      if (!titlesArray || !titlesArray.length) {
+        headlines.innerHTML = "No headlines.";
+        headlines.style.animation = ""; // clear animation
+        return;
+      }
 
-      // Speed in pixels per second (adjust as needed)
-      const speed = 100; // 100px per second
-      const duration = (contentWidth + containerWidth) / speed;
+      // build markup
+      headlines.innerHTML = titlesArray.map(t => `<span class="headline">${escapeHtml(t)}</span>`).join("");
 
-      // Apply CSS animation dynamically
-      headlines.style.animation = `scroll ${duration}s linear infinite`;
+      // Wait a frame so browser calculates sizes
+      requestAnimationFrame(() => {
+        const container = document.getElementById("scroll-container");
+        const contentWidth = headlines.offsetWidth;
+        const containerWidth = container.offsetWidth;
+
+        // If content fits in container, don't animate (just center left)
+        if (contentWidth <= containerWidth) {
+          headlines.style.animation = "";
+          headlines.style.transform = "translateX(0)";
+          return;
+        }
+
+        // speed: pixels per second
+        const speed = 200; // px/s (adjust)
+        const duration = (contentWidth + containerWidth) / speed; // seconds
+
+        // create a unique keyframe name to avoid collisions
+        const animName = 'scrollAnim_' + Date.now();
+
+        // remove any previous dynamic style tag we created
+        const prevTag = document.getElementById('dynamic-scroll-style');
+        if (prevTag) prevTag.remove();
+
+        // create keyframes that move from +containerWidth px to -contentWidth px
+        const styleTag = document.createElement('style');
+        styleTag.id = 'dynamic-scroll-style';
+        styleTag.innerHTML = `
+          @keyframes ${animName} {
+            0% { transform: translateX(${containerWidth}px); }
+            100% { transform: translateX(${-contentWidth}px); }
+          }
+        `;
+        document.head.appendChild(styleTag);
+
+        // apply animation
+        headlines.style.animation = `${animName} ${duration}s linear infinite`;
+        // ensure will-change for smoother animation
+        headlines.style.willChange = 'transform';
+      });
     }
 
-    loadHeadlines();
-
-    // Refresh every 10 minutes
-    setInterval(loadHeadlines, 10 * 60 * 1000);
+    // simple escape for HTML injection safety
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
   </script>
 
 </body>
