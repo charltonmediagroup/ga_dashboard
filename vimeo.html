@@ -100,7 +100,7 @@
 
     const params = new URLSearchParams(window.location.search);
     const code = params.get("code") || "sbr";
-    const display_time = parseInt(params.get("duration")) || 5; // seconds
+    const display_time = parseInt(params.get("duration")) || 30; // seconds
 
     fetch("data.json")
       .then(res => {
@@ -126,7 +126,7 @@
 
 
     let videos = [];
-    let currentIndex = 0;
+    let currentIndex = (parseInt(params.get("start")) - 1) || 0;
     let showingA = true;
 
     const iframeA = document.getElementById("videoA");
@@ -145,9 +145,9 @@
           videos = data.data;
           if (!videos.length) return;
 
-          loadInto(iframeA, videos[0]);
+          loadInto(iframeA, videos[currentIndex % videos.length]);
           iframeA.classList.add("active");
-          titleBox.textContent = videos[0].name;
+          titleBox.textContent = videos[currentIndex % videos.length].name;
 
           const nextIndex = (currentIndex + 1) % videos.length;
           loadInto(iframeB, videos[nextIndex]);
