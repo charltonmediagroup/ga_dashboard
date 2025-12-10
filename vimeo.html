@@ -97,10 +97,10 @@
   <script>
     const ACCESS_TOKEN = "88cadcb6cfe963cdf4fd0631692cd179";
     let showcase_id = "12016539";
-    const DISPLAY_TIME = 5;
 
     const params = new URLSearchParams(window.location.search);
     const code = params.get("code") || "sbr";
+    const display_time = parseInt(params.get("duration")) || 5; // seconds
 
     fetch("data.json")
       .then(res => {
@@ -152,7 +152,7 @@
           const nextIndex = (currentIndex + 1) % videos.length;
           loadInto(iframeB, videos[nextIndex]);
 
-          setInterval(nextVideo, DISPLAY_TIME * 1000);
+          setInterval(nextVideo, display_time * 1000);
         })};
 
     function loadInto(iframe, videoData) {
