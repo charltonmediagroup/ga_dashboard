@@ -100,7 +100,12 @@
 
     const params = new URLSearchParams(window.location.search);
     const code = params.get("code") || "sbr";
-    const display_time = parseInt(params.get("duration")) || 5; // seconds
+    const videoParam = params.get("video");
+    const display_time = parseInt(params.get("duration")) || 30; // seconds
+
+    if (videoParam) {
+      playVideo(parseInt(videoParam));
+    }
 
     fetch("data.json")
       .then(res => {
