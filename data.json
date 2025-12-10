@@ -3,7 +3,7 @@
     {
         "name": "Singapore Business Review",
         "url": "https://sbr.com.sg",
-        "rssUrl": "https://sbr.com.sg/rss.xml?send_story_magazine_social=yes&send_to_social=yes",
+        "rssUrl": "https://sbr.com.sg/news-feed.xml",
         "color": "#FF0000",
         "showcase_id": "12016773"
     },
@@ -11,7 +11,7 @@
     {
         "name": "Hong Kong Business",
         "url": "https://hongkongbusiness.hk",
-        "rssUrl": "https://hongkongbusiness.hk/rss.xml?send_story_magazine_social=yes&send_to_social=yes",
+        "rssUrl": "https://hongkongbusiness.hk/news-feed.xml",
         "color": "#FD0C1C",
         "showcase_id": "12016575"
     },
@@ -19,7 +19,7 @@
     {
         "name": "Asian Banking and Finance",
         "url": "https://asianbankingandfinance.net/",
-        "rssUrl": "https://asianbankingandfinance.net/rss.xml?send_story_magazine_social=yes&send_to_social=yes",
+        "rssUrl": "https://asianbankingandfinance.net/news-feed.xml",
         "color": "#074782",
         "showcase_id": "12016591"
     },
@@ -27,7 +27,7 @@
     {
         "name": "Insurance Asia",
         "url": "https://insuranceasia.com/",
-        "rssUrl": "https://insuranceasia.com/rss.xml?send_story_magazine_social=yes&send_to_social=yes",
+        "rssUrl": "https://insuranceasia.com/news-feed.xml",
         "color": "#D41721",
         "showcase_id": "12016593"
     },
@@ -35,7 +35,7 @@
     {
         "name": "Retail Asia",
         "url": "https://retailasia.com/",
-        "rssUrl": "https://retailasia.com/rss.xml?send_story_magazine_social=yes&send_to_social=yes",
+        "rssUrl": "https://retailasia.com/news-feed.xml",
         "color": "#3D075F",
         "showcase_id": "12016596"
     },
@@ -43,7 +43,7 @@
     {
         "name": "Healthcare Asia",
         "url": "https://healthcareasiamagazine.com/",
-        "rssUrl": "https://healthcareasiamagazine.com/rss.xml?send_story_magazine_social=yes&send_to_social=yes",
+        "rssUrl": "https://healthcareasiamagazine.com/news-feed.xml",
         "color": "#EF141A",
         "showcase_id": "12016597"
     },
@@ -51,7 +51,7 @@
     {
         "name": "Asian Power",
         "url": "https://asian-power.com/",
-        "rssUrl": "https://asian-power.com/rss.xml?send_story_magazine_social=yes&send_to_social=yes",
+        "rssUrl": "https://asian-power.com/news-feed.xml",
         "color": "#F48222",
         "showcase_id": "12016598"
     }
