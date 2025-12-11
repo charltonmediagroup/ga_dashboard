@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Dynamic Ticker</title>
+  <link rel="stylesheet" href="fonts.css">
+  <style>
+    html,
+    body {
+      height: 100%;
+      margin: 0;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      color: white;
+      font-family: "DIN", "DIN Condensed", "DIN Expanded", "Arial Narrow", Arial, sans-serif;
+      height: 100vh;
+      display: flex;
+      /* enables Flexbox */
+      justify-content: center;
+      /* horizontal centering */
+      align-items: center;
+      /* vertical centering */
+    }
+
+    #ticker {
+      display: flex;
+      align-items: center;
+      overflow: hidden;
+      white-space: nowrap;
+      /* padding: 1px 15px; */
+      box-sizing: border-box;
+      font-size: 32px;
+      width: 100vw;
+      height: 100%;
+    }
+
+    #label {
+      font-weight: bold;
+      padding: 10px 15px;
+      flex-shrink: 0;
+      text-transform: uppercase;
+      text-shadow: 0 0 5px rgba(0, 0, 0, 0.501);
+      background-color: #074782;
+      text-align: center;
+      border-radius: 5px;
+      height: 100%;
+      align-content: center;
+    }
+
+    #scroll-container {
+      overflow: hidden;
+      flex: 1;
+      margin-left: 5px;
+      position: relative;
+      border-radius: 2px;
+      background-color: red;
+      height: 100%;
+      align-content: center;
+
+    }
+
+#headlines {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.headline {
+  position: absolute;
+  width: 100%;
+  text-transform: uppercase;
+  font-weight: bold;
+  padding-left: 10px;
+  font-size: 32px;
+  line-height: 1.2em;
+  opacity: 0;
+  transform: translateY(100%);
+  transition: transform 0.6s ease, opacity 0.6s ease;
+}
+  </style>
+</head>
+
+<body>
+
+  <div id="ticker">
+    <div id="label">Exclusives</div>
+    <div id="scroll-container">
+      <span id="headlines"></span>
+    </div>
+  </div>
+
+  <script>
+    // read ?code= from URL (default to "sbr")
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get("code") || "sbr";
+
+    let rssUrl = null;          // will be set after loading data.json
+    let refreshTimer = null;
+    const REFRESH_MS = 10 * 60 * 1000; // 10 minutes
+
+    // Load config and start
+    fetch("data.json")
+      .then(response => {
+        if (!response.ok) throw new Error("Failed to load data.json: " + response.status);
+        return response.json();
+      })
+      .then(config => {
+        if (!config) throw new Error("data.json is empty or invalid JSON");
+
+        // pick rssUrl from config using code, fallback to sbr
+        rssUrl = (config[code] && config[code].rssUrl) ? config[code].rssUrl : (config["sbr"] && config["sbr"].rssUrl) ? config["sbr"].rssUrl : null;
+
+        const site = (config[code]) ? config[code] : config["sbr"];
+        document.body.style.backgroundColor = site.color;
+
+        if (!rssUrl) {
+          throw new Error("No rssUrl found for code '" + code + "' and no fallback 'sbr' entry in data.json");
+        }
+
+        console.log("Using RSS:", rssUrl);
+
+        // initial load and schedule refresh
+        loadHeadlines();
+        if (refreshTimer) clearInterval(refreshTimer);
+        refreshTimer = setInterval(loadHeadlines, REFRESH_MS);
+      })
+      .catch(err => {
+        console.error(err);
+        document.getElementById("headlines").textContent = "Failed to load configuration.";
+      });
+
+    // fetch RSS, parse, render, and setup scrolling animation
+    async function loadHeadlines() {
+      if (!rssUrl) {
+        console.warn("rssUrl not set yet; skipping loadHeadlines()");
+        return;
+      }
+
+      try {
+        const response = await fetch(rssUrl);
+        if (!response.ok) throw new Error("Failed to fetch RSS: " + response.status);
+        const xmlText = await response.text();
+        const parser = new DOMParser();
+        const xml = parser.parseFromString(xmlText, "application/xml");
+
+        // basic error check for XML parse errors
+        const parsererror = xml.querySelector("parsererror");
+        if (parsererror) {
+          console.error("XML parse error:", parsererror.textContent);
+          document.getElementById("headlines").textContent = "Invalid RSS feed.";
+          return;
+        }
+
+        const items = xml.querySelectorAll("item");
+        if (!items.length) {
+          // some feeds use entry/title instead (atom). fallback attempt:
+          const entries = xml.querySelectorAll("entry");
+          if (entries.length) {
+            renderHeadlines(Array.from(entries).map(e => {
+              const t = e.querySelector("title");
+              return t ? t.textContent.trim() : "Untitled";
+            }));
+          } else {
+            document.getElementById("headlines").textContent = "No headlines found.";
+          }
+          return;
+        }
+
+        // take up to 10 titles
+        const titles = Array.from(items).slice(0, 10).map(i => {
+          const t = i.querySelector("title");
+          return t ? t.textContent.trim() : "Untitled";
+        });
+
+        renderHeadlines(titles);
+      } catch (err) {
+        console.error("Error loading RSS feed:", err);
+        document.getElementById("headlines").textContent = "Failed to load headlines.";
+      }
+    }
+
+    // render headlines and create a pixel-accurate scroll animation
+function renderHeadlines(titlesArray) {
+  const container = document.getElementById("scroll-container");
+  const headlines = document.getElementById("headlines");
+
+  if (!titlesArray || titlesArray.length === 0) {
+    headlines.innerHTML = "<div class='headline'>No headlines</div>";
+    return;
+  }
+
+  let index = 0;
+
+  // Build stacked headlines (overlapping)
+  headlines.innerHTML = titlesArray
+    .map((t, i) => `<div class="headline" id="hl-${i}">${escapeHtml(t)}</div>`)
+    .join("");
+
+  const total = titlesArray.length;
+
+  // function to show one headline and flip upward
+  function showHeadline(i) {
+    for (let n = 0; n < total; n++) {
+      const el = document.getElementById(`hl-${n}`);
+      el.style.opacity = 0;
+      el.style.transform = "translateY(100%)";
+    }
+
+    const current = document.getElementById(`hl-${i}`);
+    current.style.opacity = 1;
+    current.style.transform = "translateY(0)";
+  }
+
+  showHeadline(index);
+
+  // flip every 4 seconds
+  setInterval(() => {
+    index = (index + 1) % total;
+    showHeadline(index);
+  }, 4000);
+}
+    // simple escape for HTML injection safety
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+  </script>
+
+</body>
+
+</html>
