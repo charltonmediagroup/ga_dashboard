@@ -54,9 +54,7 @@
     #scroll-container {
       overflow: hidden;
       flex: 1;
-      margin-left: 5px;
       position: relative;
-      border-radius: 2px;
       background-color: red;
       height: 100%;
       align-content: center;
@@ -91,6 +89,7 @@
     // read ?code= from URL (default to "sbr")
     const params = new URLSearchParams(window.location.search);
     const code = params.get("code") || "sbr";
+    const isColorTheme = params.get("theme-color");
 
     let rssUrl = null;          // will be set after loading data.json
     let refreshTimer = null;
@@ -109,7 +108,14 @@
         rssUrl = (config[code] && config[code].rssUrl) ? config[code].rssUrl : (config["sbr"] && config["sbr"].rssUrl) ? config["sbr"].rssUrl : null;
 
         const site = (config[code]) ? config[code] : config["sbr"];
-        document.body.style.backgroundColor = site.color;
+        
+        // Dynamic color
+        // document.body.style.backgroundColor = site.color;
+        if (String(isColorTheme).toLowerCase() === "true" || String(isColorTheme) === "1") {
+          console.log("Applying theme color:", site.color);
+          document.getElementById("scroll-container").style.backgroundColor = site.color;
+        }
+
 
         if (!rssUrl) {
           throw new Error("No rssUrl found for code '" + code + "' and no fallback 'sbr' entry in data.json");
@@ -203,7 +209,7 @@
         }
 
         // speed: pixels per second
-        const speed = 200; // px/s (adjust)
+        const speed = params.get("speed") || 200; // px/s (adjust)
         const duration = (contentWidth + containerWidth) / speed; // seconds
 
         // create a unique keyframe name to avoid collisions
