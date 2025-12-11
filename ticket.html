@@ -97,6 +97,7 @@
     const params = new URLSearchParams(window.location.search);
     const code = params.get("code") || "sbr";
     const isColorTheme = params.get("theme-color");
+    const duration = parseInt(params.get("duration")) || 4000; // duration per headline in ms
 
     let exclusivesUrl = null;          // will be set after loading data.json
     let refreshTimer = null;
@@ -225,7 +226,7 @@
       setInterval(() => {
         index = (index + 1) % total;
         showHeadline(index);
-      }, 4000);
+      }, duration);
     }
     // simple escape for HTML injection safety
     function escapeHtml(str) {
