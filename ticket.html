@@ -54,34 +54,32 @@
     #scroll-container {
       overflow: hidden;
       flex: 1;
-      margin-left: 5px;
       position: relative;
       border-radius: 2px;
-      background-color: red;
-      height: 100%;
-      align-content: center;
-
+      height: 40px;
+      align-content: start;
     }
 
-#headlines {
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-}
+    #headlines {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      color: black;
+    }
 
-.headline {
-  position: absolute;
-  width: 100%;
-  text-transform: uppercase;
-  font-weight: bold;
-  padding-left: 10px;
-  font-size: 32px;
-  line-height: 1.2em;
-  opacity: 0;
-  transform: translateY(100%);
-  transition: transform 0.6s ease, opacity 0.6s ease;
-}
+    .headline {
+      position: absolute;
+      width: 100%;
+      text-transform: uppercase;
+      font-weight: bold;
+      padding-left: 10px;
+      font-size: 32px;
+      line-height: 1.2em;
+      opacity: 0;
+      transform: translateY(100%);
+      transition: transform 0.6s ease, opacity 0.6s ease;
+    }
   </style>
 </head>
 
@@ -98,8 +96,9 @@
     // read ?code= from URL (default to "sbr")
     const params = new URLSearchParams(window.location.search);
     const code = params.get("code") || "sbr";
+    const isColorTheme = params.get("theme-color");
 
-    let rssUrl = null;          // will be set after loading data.json
+    let exclusivesUrl = null;          // will be set after loading data.json
     let refreshTimer = null;
     const REFRESH_MS = 10 * 60 * 1000; // 10 minutes
 
@@ -112,17 +111,21 @@
       .then(config => {
         if (!config) throw new Error("data.json is empty or invalid JSON");
 
-        // pick rssUrl from config using code, fallback to sbr
-        rssUrl = (config[code] && config[code].rssUrl) ? config[code].rssUrl : (config["sbr"] && config["sbr"].rssUrl) ? config["sbr"].rssUrl : null;
+        // pick exclusivesUrl from config using code, fallback to sbr
+        exclusivesUrl = (config[code] && config[code].exclusivesUrl) ? config[code].exclusivesUrl : (config["sbr"] && config["sbr"].exclusivesUrl) ? config["sbr"].exclusivesUrl : null;
 
         const site = (config[code]) ? config[code] : config["sbr"];
-        document.body.style.backgroundColor = site.color;
 
-        if (!rssUrl) {
-          throw new Error("No rssUrl found for code '" + code + "' and no fallback 'sbr' entry in data.json");
+        if (String(isColorTheme).toLowerCase() === "true" || String(isColorTheme) === "1") {
+          console.log("Applying theme color:", site.color);
+          document.getElementById("scroll-container").style.backgroundColor = site.color;
         }
 
-        console.log("Using RSS:", rssUrl);
+        if (!exclusivesUrl) {
+          throw new Error("No exclusivesUrl found for code '" + code + "' and no fallback 'sbr' entry in data.json");
+        }
+
+        console.log("Using RSS:", exclusivesUrl);
 
         // initial load and schedule refresh
         loadHeadlines();
@@ -136,13 +139,13 @@
 
     // fetch RSS, parse, render, and setup scrolling animation
     async function loadHeadlines() {
-      if (!rssUrl) {
-        console.warn("rssUrl not set yet; skipping loadHeadlines()");
+      if (!exclusivesUrl) {
+        console.warn("exclusivesUrl not set yet; skipping loadHeadlines()");
         return;
       }
 
       try {
-        const response = await fetch(rssUrl);
+        const response = await fetch(exclusivesUrl);
         if (!response.ok) throw new Error("Failed to fetch RSS: " + response.status);
         const xmlText = await response.text();
         const parser = new DOMParser();
@@ -185,45 +188,45 @@
     }
 
     // render headlines and create a pixel-accurate scroll animation
-function renderHeadlines(titlesArray) {
-  const container = document.getElementById("scroll-container");
-  const headlines = document.getElementById("headlines");
+    function renderHeadlines(titlesArray) {
+      const container = document.getElementById("scroll-container");
+      const headlines = document.getElementById("headlines");
 
-  if (!titlesArray || titlesArray.length === 0) {
-    headlines.innerHTML = "<div class='headline'>No headlines</div>";
-    return;
-  }
+      if (!titlesArray || titlesArray.length === 0) {
+        headlines.innerHTML = "<div class='headline'>No headlines</div>";
+        return;
+      }
 
-  let index = 0;
+      let index = 0;
 
-  // Build stacked headlines (overlapping)
-  headlines.innerHTML = titlesArray
-    .map((t, i) => `<div class="headline" id="hl-${i}">${escapeHtml(t)}</div>`)
-    .join("");
+      // Build stacked headlines (overlapping)
+      headlines.innerHTML = titlesArray
+        .map((t, i) => `<div class="headline" id="hl-${i}">${escapeHtml(t)}</div>`)
+        .join("");
 
-  const total = titlesArray.length;
+      const total = titlesArray.length;
 
-  // function to show one headline and flip upward
-  function showHeadline(i) {
-    for (let n = 0; n < total; n++) {
-      const el = document.getElementById(`hl-${n}`);
-      el.style.opacity = 0;
-      el.style.transform = "translateY(100%)";
+      // function to show one headline and flip upward
+      function showHeadline(i) {
+        for (let n = 0; n < total; n++) {
+          const el = document.getElementById(`hl-${n}`);
+          el.style.opacity = 0;
+          el.style.transform = "translateY(100%)";
+        }
+
+        const current = document.getElementById(`hl-${i}`);
+        current.style.opacity = 1;
+        current.style.transform = "translateY(0)";
+      }
+
+      showHeadline(index);
+
+      // flip every 4 seconds
+      setInterval(() => {
+        index = (index + 1) % total;
+        showHeadline(index);
+      }, 4000);
     }
-
-    const current = document.getElementById(`hl-${i}`);
-    current.style.opacity = 1;
-    current.style.transform = "translateY(0)";
-  }
-
-  showHeadline(index);
-
-  // flip every 4 seconds
-  setInterval(() => {
-    index = (index + 1) % total;
-    showHeadline(index);
-  }, 4000);
-}
     // simple escape for HTML injection safety
     function escapeHtml(str) {
       return String(str)

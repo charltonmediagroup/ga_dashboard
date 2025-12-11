@@ -6,7 +6,8 @@
   <title>Dynamic Ticker 2</title>
   <link rel="stylesheet" href="fonts.css">
   <style>
-    html, body {
+    html,
+    body {
       height: 100%;
       margin: 0;
     }
@@ -18,9 +19,12 @@
       color: white;
       font-family: "DIN", "DIN Condensed", "DIN Expanded", "Arial Narrow", Arial, sans-serif;
       height: 100vh;
-      display: flex;            /* enables Flexbox */
-      justify-content: center;  /* horizontal centering */
-      align-items: center;      /* vertical centering */
+      display: flex;
+      /* enables Flexbox */
+      justify-content: center;
+      /* horizontal centering */
+      align-items: center;
+      /* vertical centering */
     }
 
     #ticker {
@@ -32,7 +36,7 @@
       box-sizing: border-box;
       font-size: 24px;
       width: 100vw;
-      box-shadow: 0 0 5px rgba(0,0,0,0.5);
+      box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
     }
 
     #label {
@@ -49,7 +53,7 @@
       margin-left: 5px;
       padding: 5px;
       position: relative;
-      box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+      box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5);
       border-radius: 2px;
     }
 
@@ -70,12 +74,16 @@
 
 <body>
 
-  <div id="ticker">
-    <div id="label">Latest News</div>
-    <div id="scroll-container">
-      <span id="headlines">...</span>
+  <iframe>
+
+
+    <div id="ticker">
+      <div id="label">Latest News</div>
+      <div id="scroll-container">
+        <span id="headlines">...</span>
+      </div>
     </div>
-  </div>
+  </iframe>
 
   <script>
     // read ?code= from URL (default to "sbr")
@@ -97,10 +105,10 @@
 
         // pick rssUrl from config using code, fallback to sbr
         rssUrl = (config[code] && config[code].rssUrl) ? config[code].rssUrl : (config["sbr"] && config["sbr"].rssUrl) ? config["sbr"].rssUrl : null;
-        
+
         const site = (config[code]) ? config[code] : config["sbr"];
         document.body.style.color = site.color;
-        
+
         if (!rssUrl) {
           throw new Error("No rssUrl found for code '" + code + "' and no fallback 'sbr' entry in data.json");
         }

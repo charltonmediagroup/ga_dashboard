@@ -19,6 +19,7 @@
       font-family: "DIN", "DIN Condensed", "DIN Expanded", "Arial Narrow", Arial, sans-serif;
       height: 100vh;
       display: flex;
+      flex-direction: column;
       /* enables Flexbox */
       justify-content: center;
       /* horizontal centering */
@@ -73,6 +74,7 @@
       display: inline-block;
       margin: 0 60px;
     }
+
   </style>
 </head>
 
@@ -108,7 +110,7 @@
         rssUrl = (config[code] && config[code].rssUrl) ? config[code].rssUrl : (config["sbr"] && config["sbr"].rssUrl) ? config["sbr"].rssUrl : null;
 
         const site = (config[code]) ? config[code] : config["sbr"];
-        
+
         // Dynamic color
         // document.body.style.backgroundColor = site.color;
         if (String(isColorTheme).toLowerCase() === "true" || String(isColorTheme) === "1") {
