@@ -54,6 +54,38 @@
         "rssUrl": "https://asian-power.com/news-feed.xml",
         "color": "#F48222",
         "showcase_id": "12016598"
+    },
+    "qsr":
+    {
+        "name": "QSR Media",
+        "url": "https://qsrmedia.com/",
+        "rssUrl": "https://qsrmedia.com/news-feed.xml",
+        "color": "#AA1E23",
+        "showcase_id": "12016598"
+    },
+    "qsr-asia":
+    {
+        "name": "QSR Media Asia",
+        "url": "https://qsrmedia.asia/",
+        "rssUrl": "https://qsrmedia.asia/news-feed.xml",
+        "color": "#AA1E23",
+        "showcase_id": "12016598"
+    },
+    "qsr-aus":
+    {
+        "name": "QSR Media AUS",
+        "url": "https://qsrmedia.com.au/",
+        "rssUrl": "https://qsrmedia.com.au/news-feed.xml",
+        "color": "#AA1E23",
+        "showcase_id": "12018440"
+    },
+    "qsr-uk":
+    {
+        "name": "QSR Media UK",
+        "url": "https://qsrmedia.co.uk/",
+        "rssUrl": "https://qsrmedia.co.uk/news-feed.xml",
+        "color": "#AA1E23",
+        "showcase_id": "12018444"
     }
 }
 

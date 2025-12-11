@@ -6,7 +6,8 @@
   <title>Dynamic Ticker</title>
   <link rel="stylesheet" href="fonts.css">
   <style>
-    html, body {
+    html,
+    body {
       height: 100%;
       margin: 0;
     }
@@ -14,13 +15,15 @@
     body {
       margin: 0;
       padding: 0;
-      background: red;
       color: white;
       font-family: "DIN", "DIN Condensed", "DIN Expanded", "Arial Narrow", Arial, sans-serif;
       height: 100vh;
-      display: flex;            /* enables Flexbox */
-      justify-content: center;  /* horizontal centering */
-      align-items: center;      /* vertical centering */
+      display: flex;
+      /* enables Flexbox */
+      justify-content: center;
+      /* horizontal centering */
+      align-items: center;
+      /* vertical centering */
     }
 
     #ticker {
@@ -28,28 +31,36 @@
       align-items: center;
       overflow: hidden;
       white-space: nowrap;
-      padding: 1px 15px;
+      /* padding: 1px 15px; */
       box-sizing: border-box;
       font-size: 32px;
       width: 100vw;
+      height: 100%;
     }
 
     #label {
       font-weight: bold;
-      padding-right: 20px;
+      padding: 10px 15px;
       flex-shrink: 0;
       text-transform: uppercase;
       text-shadow: 0 0 5px rgba(0, 0, 0, 0.501);
+      background-color: #074782;
+      text-align: center;
+      border-radius: 5px;
+      height: 100%;
+      align-content: center;
     }
 
     #scroll-container {
       overflow: hidden;
       flex: 1;
       margin-left: 5px;
-      padding: 5px;
       position: relative;
-      box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
       border-radius: 2px;
+      background-color: red;
+      height: 100%;
+      align-content: center;
+
     }
 
     #headlines {
@@ -96,10 +107,10 @@
 
         // pick rssUrl from config using code, fallback to sbr
         rssUrl = (config[code] && config[code].rssUrl) ? config[code].rssUrl : (config["sbr"] && config["sbr"].rssUrl) ? config["sbr"].rssUrl : null;
-        
+
         const site = (config[code]) ? config[code] : config["sbr"];
         document.body.style.backgroundColor = site.color;
-        
+
         if (!rssUrl) {
           throw new Error("No rssUrl found for code '" + code + "' and no fallback 'sbr' entry in data.json");
         }
