@@ -41,7 +41,7 @@
 
     #label {
       font-weight: bold;
-      padding: 10px 10px;
+      padding: 10px 25px;
       flex-shrink: 0;
       text-transform: uppercase;
       text-shadow: 0 0 5px rgba(0, 0, 0, 0.501);
@@ -108,7 +108,8 @@
 
         // pick rssUrl from config using code, fallback to sbr
         rssUrl = (config[code] && config[code].rssUrl) ? config[code].rssUrl : (config["sbr"] && config["sbr"].rssUrl) ? config["sbr"].rssUrl : null;
-
+        rssUrl = rssUrl + (rssUrl.includes("?") ? "&" : "?") + "cache=" + Date.now();
+        
         const site = (config[code]) ? config[code] : config["sbr"];
 
         // Dynamic color

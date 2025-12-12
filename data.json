@@ -13,7 +13,7 @@
         "name": "Hong Kong Business",
         "url": "https://hongkongbusiness.hk",
         "rssUrl": "https://hongkongbusiness.hk/news-feed.xml",
-        "exclusivesUrl": "https://hongkongbusiness.hk/news-feed.xml?cache=false",
+        "exclusivesUrl": "https://hongkongbusiness.hk/news-feed.xml",
         "color": "#FD0C1C",
         "showcase_id": "12016575"
     },
