@@ -6,25 +6,9 @@
         "rssUrl": "https://sbr.com.sg/news-feed.xml",
         "exclusivesUrl": "https://sbr.com.sg/news-feed.xml",
         "color": "#FF0000",
-        "showcase_id": "12016773"
-    },
-    "sbr_awards":
-    {
-        "name": "Singapore Business Review Awards",
-        "url": "https://sbr.com.sg",
-        "rssUrl": "https://sbr.com.sg/news-feed.xml",
-        "exclusivesUrl": "https://sbr.com.sg/news-feed.xml",
-        "color": "#FF0000",
-        "showcase_id": "12016539"
-    },
-    "sbr_shorts":
-    {
-        "name": "Singapore Business Review Shorts",
-        "url": "https://sbr.com.sg",
-        "rssUrl": "https://sbr.com.sg/news-feed.xml",
-        "exclusivesUrl": "https://sbr.com.sg/news-feed.xml",
-        "color": "#FF0000",
-        "showcase_id": "12023087"
+        "showcase_id": "12016773",
+        "awards_showcase_id": "12016539",
+        "shorts_showcase_id": "12023087"
     },
     "hkb":
     {
