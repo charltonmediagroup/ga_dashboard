@@ -2,7 +2,7 @@
 <html>
 
 <head>
-  <title>Fullscreen 16:9 Vimeo Rotating Videos</title>
+  <title>Shorts</title>
   <style>
     html,
     body {
@@ -22,29 +22,31 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: start;
+      justify-content: center;
       width: 100%;
       height: 100%;
     }
 
     /* Video + title container */
     #video-container {
-      width: 90%;
-      max-width: 1920px;
+      width: min(90vw, 480px);
+      max-width: 480px;
+      /* optional: keeps portrait look */
       display: flex;
       flex-direction: column;
       align-items: center;
     }
 
-    /* 16:9 video container */
+    /* 9:16 portrait video container */
     #video-area {
       position: relative;
       width: 100%;
-      padding-top: 56.25%;
-      /* 16:9 */
+      padding-top: 177.78%;
+      /* 9:16 aspect ratio */
       background: transparent;
       overflow: hidden;
     }
+
 
     .video-layer {
       position: absolute;
@@ -153,7 +155,8 @@
           loadInto(iframeB, videos[nextIndex]);
 
           setInterval(nextVideo, display_time * 1000);
-        })};
+        })
+    };
 
     function loadInto(iframe, videoData) {
       const id = videoData.uri.split("/")[2];
