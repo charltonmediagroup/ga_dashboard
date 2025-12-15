@@ -89,7 +89,9 @@
         "rssUrl": "https://qsrmedia.com.au/news-feed.xml",
         "exclusivesUrl": "https://qsrmedia.com.au/news-feed.xml",
         "color": "#AA1E23",
-        "showcase_id": "12018440"
+        "showcase_id": "12018440",
+        "awards_showcase_id": "12016539",
+        "shorts_showcase_id": "12023206"
     },
     "qsr-uk":
     {
@@ -98,7 +100,9 @@
         "rssUrl": "https://qsrmedia.co.uk/news-feed.xml",
         "exclusivesUrl": "https://qsrmedia.co.uk/news-feed.xml",
         "color": "#AA1E23",
-        "showcase_id": "12018444"
+        "showcase_id": "12018444",
+        "awards_showcase_id": "12016539",
+        "shorts_showcase_id": "12023205"
     }
 }
 
