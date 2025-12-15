@@ -24,12 +24,21 @@
     // Get datetime from URL parameter
     const params = new URLSearchParams(window.location.search);
     const datetimeParam = params.get('datetime'); // Example: "2025-12-31T23:59:59"
+    const fontSizeParam = params.get('fontsize');
+
+    const countdownElement = document.getElementById("countdown");
+
+    if (fontSizeParam) {
+      countdownElement.style.fontSize = fontSizeParam;
+    } else {
+      countdownElement.style.fontSize = "3em"; // default size
+    }
 
     if (!datetimeParam) {
       document.getElementById('countdown').innerHTML = "No datetime provided in URL.";
     } else {
       const targetDate = new Date(datetimeParam).getTime();
-      const countdownElement = document.getElementById("countdown");
+
 
       const interval = setInterval(() => {
         const now = new Date().getTime();
