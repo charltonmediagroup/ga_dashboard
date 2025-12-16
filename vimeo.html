@@ -29,7 +29,7 @@
 
     /* Video + title container */
     #video-container {
-      width: 90%;
+      width: 100%;
       max-width: 1920px;
       display: flex;
       flex-direction: column;
@@ -157,7 +157,7 @@
 
     function loadInto(iframe, videoData) {
       const id = videoData.uri.split("/")[2];
-      iframe.src = `https://player.vimeo.com/video/${id}?autoplay=1&muted=1&loop=0&background=1`;
+      iframe.src = `https://player.vimeo.com/video/${id}?autoplay=1&muted=1&loop=0&background=1&transparent=1`;
     }
 
     function nextVideo() {
