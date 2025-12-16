@@ -6,6 +6,7 @@
         "rssUrl": "https://sbr.com.sg/news-feed.xml",
         "exclusivesUrl": "https://sbr.com.sg/news-feed.xml",
         "latestVideosUrl": "https://dev.sbr.com.sg/latest-videos.xml",
+        "inFocusVideosUrl": "https://dev.sbr.com.sg/in-focus-articles.xml",
         "color": "#FF0000",
         "showcase_id": "12016773",
         "awards_showcase_id": "12016539",

@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <title>Countdown Timer</title>
+    <style>
+        body {
+            font-family: 'Roboto', Arial, sans-serif;
+            background-color: transparent;
+            margin: 0;
+            padding: 20px;
+        }
+
+        #countdown {
+            color: black;
+            text-align: left;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="countdown">Loading...</div>
+
+    <script>
+        const params = new URLSearchParams(window.location.search);
+        const fontSizeParam = params.get('fontsize');
+
+        const countdownElement = document.getElementById("countdown");
+        countdownElement.style.fontSize = fontSizeParam || "3em";
+
+        const keys = ["mea", "nba", "tea", "iba"];
+        const groups = {};
+
+        keys.forEach(key => {
+            const value = params.get(key);
+            if (value) {
+                if (!groups[value]) groups[value] = [];
+                groups[value].push(key);
+            }
+        });
+
+        if (Object.keys(groups).length === 0) {
+            countdownElement.innerHTML = "No MEA/NBA/TEA/IBA parameters found.";
+            throw new Error("No countdown parameters");
+        }
+
+        function updateCountdowns() {
+            const now = Date.now();
+            let html = "";
+
+            Object.entries(groups).forEach(([datetime, labels]) => {
+                const target = new Date(datetime).getTime();
+
+                if (isNaN(target)) {
+                    html += `${labels.map(l => l.toUpperCase()).join(",")}: INVALID DATE<br>`;
+                    return;
+                }
+
+                const distance = target - now;
+
+                if (distance <= 0) {
+                    html += `${labels.map(l => l.toUpperCase()).join(",")}: DONE<br>`;
+                    return;
+                }
+
+                const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+                html += `${labels.map(l => l.toUpperCase()).join(",")}: ${days}d ${hours}h ${minutes}m ${seconds}s<br>`;
+            });
+
+            countdownElement.innerHTML = html;
+        }
+
+        updateCountdowns();
+        setInterval(updateCountdowns, 1000);
+    </script>
+
+</body>
+
+</html>
