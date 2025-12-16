@@ -4,7 +4,7 @@
         "name": "Singapore Business Review",
         "url": "https://sbr.com.sg",
         "rssUrl": "https://sbr.com.sg/news-feed.xml",
-        "exclusivesUrl": "https://dev.sbr.com.sg/in-focus-articles.xml",
+        "exclusivesUrl": "https://sbr.com.sg/news-feed.xml",
         "latestVideosUrl": "https://dev.sbr.com.sg/latest-videos.xml",
         "color": "#FF0000",
         "showcase_id": "12016773",
@@ -16,7 +16,7 @@
         "name": "Hong Kong Business",
         "url": "https://hongkongbusiness.hk",
         "rssUrl": "https://hongkongbusiness.hk/news-feed.xml",
-        "exclusivesUrl": "https://dev.hongkongbusiness.hk/in-focus-articles.xml",
+        "exclusivesUrl": "https://hongkongbusiness.hk/news-feed.xml",
         "latestVideosUrl": "https://dev.hongkongbusiness.hk/latest-videos.xml",
         "color": "#FD0C1C",
         "showcase_id": "12016575"
