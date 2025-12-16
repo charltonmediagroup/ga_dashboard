@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Fullscreen 16:9 Vimeo Rotating Videos</title>
+
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      justify-content: flex-start;
+      align-items: center;
+      background: transparent;
+      font-family: Arial, sans-serif;
+    }
+
+    #wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      width: 100%;
+      height: 100%;
+    }
+
+    #video-container {
+      width: 90%;
+      max-width: 1920px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    #video-area {
+      position: relative;
+      width: 100%;
+      padding-top: 56.25%; /* 16:9 */
+      background: transparent;
+      overflow: hidden;
+    }
+
+    .video-layer {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      border: 0;
+      opacity: 0;
+      transition: opacity 1s ease-in-out;
+      z-index: 0;
+    }
+
+    .video-layer.active {
+      opacity: 1;
+      z-index: 1;
+    }
+
+    #title {
+      width: 100%;
+      max-height: 3em;
+      font-size: 2vw;
+      font-weight: bold;
+      color: black;
+      text-align: center;
+      line-height: 1.5em;
+      overflow: hidden;
+      word-break: break-word;
+      white-space: normal;
+      margin-top: 10px;
+      box-sizing: border-box;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="wrapper">
+    <div id="video-container">
+      <div id="video-area">
+        <iframe id="videoA" class="video-layer" allow="autoplay; fullscreen"></iframe>
+        <iframe id="videoB" class="video-layer" allow="autoplay; fullscreen"></iframe>
+      </div>
+      <div id="title"></div>
+    </div>
+  </div>
+
+  <script>
+    /* ---------------- URL PARAMETERS ---------------- */
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get("code") || "sbr";
+    const displayTime = parseInt(params.get("duration")) || 30;
+    const startIndex = (parseInt(params.get("start")) - 1) || 0;
+
+    /* ---------------- STATE ---------------- */
+    let latestVideosUrl = null;
+    let videos = [];
+    let currentIndex = startIndex;
+    let showingA = true;
+
+    const iframeA = document.getElementById("videoA");
+    const iframeB = document.getElementById("videoB");
+    const titleBox = document.getElementById("title");
+
+    /* ---------------- LOAD CONFIG ---------------- */
+    fetch("data.json")
+      .then(res => {
+        if (!res.ok) throw new Error("Failed to load data.json");
+        return res.json();
+      })
+      .then(config => {
+        const site = config[code] || config["sbr"];
+        if (!site || !site.latestVideosUrl) {
+          throw new Error("latestVideosUrl not found in data.json");
+        }
+
+        latestVideosUrl = site.latestVideosUrl;
+        console.log("Using latestVideosUrl:", latestVideosUrl);
+
+        loadVideos();
+      })
+      .catch(err => console.error(err));
+
+    /* ---------------- LOAD RSS (XML) ---------------- */
+    function loadVideos() {
+      fetch(latestVideosUrl + "?_ts=" + Date.now())
+        .then(res => res.text())
+        .then(xmlText => {
+          const parser = new DOMParser();
+          const xml = parser.parseFromString(xmlText, "application/xml");
+
+          const items = xml.querySelectorAll("item");
+
+          videos = Array.from(items).map(item => ({
+            title: item.querySelector("title")?.textContent.trim(),
+            link: item.querySelector("description")?.textContent.trim()
+          }))
+          .filter(v => v.link && v.link.includes("vimeo.com"));
+
+          if (!videos.length) {
+            console.warn("No videos found in RSS");
+            return;
+          }
+
+          showInitial();
+          setInterval(nextVideo, displayTime * 1000);
+        })
+        .catch(err => console.error("Failed to load latest videos:", err));
+    }
+
+    /* ---------------- INITIAL DISPLAY ---------------- */
+    function showInitial() {
+      const first = videos[currentIndex % videos.length];
+      const next = videos[(currentIndex + 1) % videos.length];
+
+      loadInto(iframeA, first.link);
+      iframeA.classList.add("active");
+      titleBox.textContent = first.title;
+
+      loadInto(iframeB, next.link);
+    }
+
+    /* ---------------- LOAD VIDEO ---------------- */
+    function loadInto(iframe, videoLink) {
+      const id = extractVimeoId(videoLink);
+      iframe.src = `https://player.vimeo.com/video/${id}?autoplay=1&muted=1&background=1&transparent=1`;
+    }
+
+    /* ---------------- ROTATION ---------------- */
+    function nextVideo() {
+      currentIndex = (currentIndex + 1) % videos.length;
+      const current = videos[currentIndex];
+      const next = videos[(currentIndex + 1) % videos.length];
+
+      titleBox.style.opacity = 0;
+      setTimeout(() => {
+        titleBox.textContent = current.title;
+        titleBox.style.opacity = 1;
+      }, 200);
+
+      if (showingA) {
+        iframeB.classList.add("active");
+        iframeA.classList.remove("active");
+        loadInto(iframeA, next.link);
+      } else {
+        iframeA.classList.add("active");
+        iframeB.classList.remove("active");
+        loadInto(iframeB, next.link);
+      }
+
+      showingA = !showingA;
+    }
+
+    /* ---------------- HELPERS ---------------- */
+    function extractVimeoId(url) {
+      const match = url.match(/vimeo\.com\/(\d+)/);
+      return match ? match[1] : "";
+    }
+  </script>
+</body>
+</html>

@@ -5,6 +5,7 @@
         "url": "https://sbr.com.sg",
         "rssUrl": "https://sbr.com.sg/news-feed.xml",
         "exclusivesUrl": "https://sbr.com.sg/news-feed.xml",
+        "latestVideosUrl": "https://dev.sbr.com.sg/latest-videos.xml",
         "color": "#FF0000",
         "showcase_id": "12016773",
         "awards_showcase_id": "12016539",
@@ -16,6 +17,7 @@
         "url": "https://hongkongbusiness.hk",
         "rssUrl": "https://hongkongbusiness.hk/news-feed.xml",
         "exclusivesUrl": "https://hongkongbusiness.hk/news-feed.xml",
+        "latestVideosUrl": "https://dev.hongkongbusiness.hk/latest-videos.xml",
         "color": "#FD0C1C",
         "showcase_id": "12016575"
     },
@@ -25,6 +27,7 @@
         "url": "https://asianbankingandfinance.net/",
         "rssUrl": "https://asianbankingandfinance.net/news-feed.xml",
         "exclusivesUrl": "https://asianbankingandfinance.net/news-feed.xml",
+        "latestVideosUrl": "https://dev.asianbankingandfinance.net/latest-videos.xml",
         "color": "#074782",
         "showcase_id": "12016591"
     },
