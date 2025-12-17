@@ -64,7 +64,7 @@
           countdownElement.textContent = "DONE";
           return;
         }
-        startCountdown(startDateISO);
+        startCountdown(startDateISO, countdownElement);
       })
       .catch(err => {
         console.error(err);
@@ -124,24 +124,19 @@
     // =============================
     // Countdown logic
     // =============================
-    function startCountdown(dateString) {
+    function startCountdown(dateString, displayElement) {
       const targetTime = new Date(dateString).getTime();
-
-      while (Date.now() % 1000 != 0) {
-        // wait for the next full second
-      }
-
       if (isNaN(targetTime)) {
-        countdownElement.textContent = "Invalid date.";
+        displayElement.textContent = "Invalid date.";
         return;
       }
 
-      const timer = setInterval(() => {
-        const diff = targetTime - Date.now();
+      function update() {
+        const now = Date.now();
+        const diff = targetTime - now;
 
         if (diff <= 0) {
-          clearInterval(timer);
-          countdownElement.textContent = "DONE";
+          displayElement.textContent = "DONE";
           return;
         }
 
@@ -150,10 +145,16 @@
         const minutes = Math.floor((diff / (1000 * 60)) % 60);
         const seconds = Math.floor((diff / 1000) % 60);
 
-        countdownElement.textContent = `${days}d ${hours}h ${minutes}m ${seconds}s`;
-      }, 1000);
+        displayElement.textContent = `${days}d ${hours}h ${minutes}m ${seconds}s`;
+
+        // Schedule next update exactly at the next second
+        const nextTick = 1000 - (now % 1000);
+        setTimeout(update, nextTick);
+      }
+
+      update(); // start immediately
     }
-    
+
   </script>
 </body>
 

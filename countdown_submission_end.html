@@ -64,7 +64,7 @@
           countdownElement.textContent = "DONE";
           return;
         }
-        startCountdown(endDateISO);
+        startCountdown(endDateISO, countdownElement);
       })
       .catch(err => {
         console.error(err);
