@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Extract Dates</title>
+</head>
+<body>
+<h2>Start and End Dates</h2>
+
+<pre id="result" style="white-space: pre-wrap; border: 1px solid #ccc; padding: 10px;"></pre>
+
+<script>
+(async () => {
+    const url = 'https://sbr.com.sg/event/sbr-management-excellence-awards'; // <-- put your URL here
+    const result = document.getElementById('result');
+
+    try {
+        const response = await fetch(url, { method: 'GET', mode: 'cors' });
+        const html = await response.text();
+
+        // Parse HTML
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
+
+        // Get start and end dates
+        const startDiv = doc.querySelector('div.date.start-date');
+        const endDiv = doc.querySelector('div.date.end-date');
+
+        const startDate = startDiv ? startDiv.getAttribute('date') : 'Not found';
+        const endDate = endDiv ? endDiv.getAttribute('date') : 'Not found';
+
+        result.textContent = `Start Date: ${startDate}\nEnd Date: ${endDate}`;
+    } catch (error) {
+        result.textContent = 'Error fetching HTML: ' + error;
+    }
+})();
+</script>
+</body>
+</html>
