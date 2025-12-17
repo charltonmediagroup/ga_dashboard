@@ -57,7 +57,7 @@
       .then(items => {
         const award = items.find(item => item.title?.trim() === awardName.trim());
         if (!award?.view_node) throw new Error("view_node not found");
-        return getCachedEndDate(award.view_node);
+        return fetchAwardEndDate(award.view_node);
       })
       .then(endDateISO => {
         if (!endDateISO) {
@@ -72,42 +72,47 @@
       });
 
     // =============================
-    // Cache only the date
+    // Cache fetch function
     // =============================
-    async function getCachedEndDate(url) {
-      const cacheKey = `award-end-date-${url}`;
-
+    async function cacheFetch(key, url, ttl = CACHE_TTL) {
       if (forceRefresh) {
-        localStorage.removeItem(cacheKey);
+        localStorage.removeItem(key);
       } else {
-        const cached = localStorage.getItem(cacheKey);
+        const cached = localStorage.getItem(key);
         if (cached) {
-          const { date, expiry } = JSON.parse(cached);
-          if (Date.now() < expiry) return date;
+          const { data, expiry } = JSON.parse(cached);
+          if (Date.now() < expiry) return data;
         }
       }
 
-      // Fetch and parse the date
+      const response = await fetch(url);
+      const html = await response.text();
+      localStorage.setItem(key, JSON.stringify({ data: html, expiry: Date.now() + ttl }));
+      return html;
+    }
+
+    // =============================
+    // Fetch end date from HTML
+    // =============================
+    async function fetchAwardEndDate(url) {
       try {
-        const response = await fetch(url);
-        const html = await response.text();
+        const html = await cacheFetch(`award-end-${url}`, url, CACHE_TTL);
         const parser = new DOMParser();
         const doc = parser.parseFromString(html, "text/html");
 
         const endDiv = doc.querySelector("div.date.end-date");
         const rawDate = endDiv?.getAttribute("date");
-        if (!rawDate) return null;
 
-        const isoDate = convertToISO(rawDate);
-        localStorage.setItem(cacheKey, JSON.stringify({ date: isoDate, expiry: Date.now() + CACHE_TTL }));
-        return isoDate;
+        if (!rawDate) return null;
+        return convertToISO(rawDate);
       } catch (e) {
         return null;
       }
     }
 
     // =============================
-    // Convert "Jan 23 2026 23:59:00" → ISO
+    // Convert "Jan 23 2026 23:59:00"
+    // → "2026-01-23T23:59:00"
     // =============================
     function convertToISO(dateStr) {
       const d = new Date(dateStr);
