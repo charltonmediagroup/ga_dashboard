@@ -61,14 +61,14 @@
       })
       .then(endDateISO => {
         if (!endDateISO) {
-          countdownElement.textContent = "DONE";
+          countdownElement.textContent = "Submission Ended";
           return;
         }
         startCountdown(endDateISO, countdownElement);
       })
       .catch(err => {
         console.error(err);
-        countdownElement.textContent = "DONE";
+        countdownElement.textContent = "Submission Ended";
       });
 
     // =============================
@@ -146,7 +146,7 @@
 
         if (diff <= 0) {
           clearInterval(timer);
-          countdownElement.textContent = "DONE";
+          displayElement.textContent = "Submission Ended";
           return;
         }
 
