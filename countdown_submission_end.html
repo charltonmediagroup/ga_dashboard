@@ -64,11 +64,15 @@
         return fetchAwardEndDate(award.view_node);
       })
       .then(endDateISO => {
+         if (!endDateISO) {
+          countdownElement.textContent = "DONE";
+          return;
+        }
         startCountdown(endDateISO);
       })
       .catch(err => {
         console.error(err);
-        countdownElement.textContent = "Failed to load countdown.";
+        countdownElement.textContent = "DONE";
       });
 
     // =============================

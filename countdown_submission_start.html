@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <title>Countdown Timer Submission Start</title>
@@ -64,11 +65,15 @@
         return fetchAwardStartDate(award.view_node);
       })
       .then(startDateISO => {
+        if (!startDateISO) {
+          countdownElement.textContent = "DONE";
+          return;
+        }
         startCountdown(startDateISO);
       })
       .catch(err => {
         console.error(err);
-        countdownElement.textContent = "Failed to load countdown.";
+        countdownElement.textContent = "DONE";
       });
 
     // =============================
@@ -141,4 +146,5 @@
     }
   </script>
 </body>
+
 </html>
