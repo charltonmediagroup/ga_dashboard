@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <title>Countdown Timer</title>
@@ -30,8 +31,15 @@
 
     const code = params.get("code") || "sbr";
     const awardName = params.get("name");
+    const fontSizeParam = params.get('fontsize');
 
     const countdownElement = document.getElementById("countdown");
+
+    if (fontSizeParam) {
+      countdownElement.style.fontSize = fontSizeParam;
+    } else {
+      countdownElement.style.fontSize = "3em"; // default size
+    }
 
     if (!awardName) {
       countdownElement.textContent = "No award name provided.";
@@ -101,4 +109,5 @@
     }
   </script>
 </body>
+
 </html>
