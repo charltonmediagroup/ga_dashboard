@@ -83,6 +83,10 @@
     function startCountdown(dateString) {
       const targetTime = new Date(dateString).getTime();
 
+      while (Date.now() % 1000 != 0) {
+        // wait for the next full second
+      }
+
       if (isNaN(targetTime)) {
         countdownElement.textContent = "Invalid date format.";
         return;
