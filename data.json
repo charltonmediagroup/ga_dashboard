@@ -19,7 +19,9 @@
         "latestVideosUrl": "https://dev.hongkongbusiness.hk/latest-videos.xml",
         "color": "#FD0C1C",
         "awards_showcase_id": "12016539",
-        "showcase_id": "12016575"
+        "showcase_id": "12016575",
+        "shorts_showcase_id": "12028719"
+        
     },
     "abf": {
         "name": "Asian Banking and Finance",
@@ -28,7 +30,8 @@
         "exclusivesUrl": "https://asianbankingandfinance.net/news-feed.xml",
         "latestVideosUrl": "https://dev.asianbankingandfinance.net/latest-videos.xml",
         "color": "#074782",
-        "showcase_id": "12016591"
+        "showcase_id": "12016591",
+        "shorts_showcase_id": "12028608"
     },
     "ia": {
         "name": "Insurance Asia",
@@ -36,7 +39,8 @@
         "rssUrl": "https://insuranceasia.com/news-feed.xml",
         "exclusivesUrl": "https://insuranceasia.com/news-feed.xml",
         "color": "#D41721",
-        "showcase_id": "12016593"
+        "showcase_id": "12016593",
+        "shorts_showcase_id": "12028614"
     },
     "ra": {
         "name": "Retail Asia",
@@ -44,7 +48,8 @@
         "rssUrl": "https://retailasia.com/news-feed.xml",
         "exclusivesUrl": "https://retailasia.com/news-feed.xml",
         "color": "#3D075F",
-        "showcase_id": "12016596"
+        "showcase_id": "12016596",
+        "shorts_showcase_id": "12028583"
     },
     "hca": {
         "name": "Healthcare Asia",
@@ -52,7 +57,8 @@
         "rssUrl": "https://healthcareasiamagazine.com/news-feed.xml",
         "exclusivesUrl": "https://healthcareasiamagazine.com/news-feed.xml",
         "color": "#EF141A",
-        "showcase_id": "12016597"
+        "showcase_id": "12016597",
+        "shorts_showcase_id": "12028569"
     },
     "ap": {
         "name": "Asian Power",
@@ -60,7 +66,8 @@
         "rssUrl": "https://asian-power.com/news-feed.xml",
         "exclusivesUrl": "https://asian-power.com/news-feed.xml",
         "color": "#F48222",
-        "showcase_id": "12016598"
+        "showcase_id": "12016598",
+        "shorts_showcase_id": "12028649"
     },
     "qsr": {
         "name": "QSR Media",
