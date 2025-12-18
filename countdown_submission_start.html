@@ -94,6 +94,14 @@
         const parser = new DOMParser();
         const doc = parser.parseFromString(html, "text/html");
 
+
+        const nominationDiv = doc.querySelector('div.nomination-date');
+
+        if (!nominationDiv) {
+          result.textContent = 'Nomination section not found';
+          return;
+        }
+
         const startDiv = doc.querySelector("div.date.start-date");
         const rawDate = startDiv?.getAttribute("date");
         if (!rawDate) return null;
