@@ -19,7 +19,9 @@
         "latestVideosUrl": "https://dev.hongkongbusiness.hk/latest-videos.xml",
         "color": "#FD0C1C",
         "awards_showcase_id": "12016539",
-        "showcase_id": "12016575"
+        "showcase_id": "12016575",
+        "shorts_showcase_id": "12028719"
+        
     },
     "abf": {
         "name": "Asian Banking and Finance",
