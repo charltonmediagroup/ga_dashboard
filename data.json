@@ -37,7 +37,8 @@
         "rssUrl": "https://insuranceasia.com/news-feed.xml",
         "exclusivesUrl": "https://insuranceasia.com/news-feed.xml",
         "color": "#D41721",
-        "showcase_id": "12016593"
+        "showcase_id": "12016593",
+        "shorts_showcase_id": "12028614"
     },
     "ra": {
         "name": "Retail Asia",
@@ -63,7 +64,8 @@
         "rssUrl": "https://asian-power.com/news-feed.xml",
         "exclusivesUrl": "https://asian-power.com/news-feed.xml",
         "color": "#F48222",
-        "showcase_id": "12016598"
+        "showcase_id": "12016598",
+        "shorts_showcase_id": "12028649"
     },
     "qsr": {
         "name": "QSR Media",
