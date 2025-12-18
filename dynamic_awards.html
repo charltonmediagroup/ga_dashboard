@@ -1,203 +1,188 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Awards Countdown Grid</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Awards Countdown Grid</title>
 
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 24px;
-            background: #f7f7f7;
-        }
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 24px;
+    background: #f7f7f7;
+  }
 
-        .grid {
-            width: 100%;
-            max-width: 1400px;
-            margin: 0 auto;
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-            gap: 12px;
-        }
+  .grid {
+    width: 100%;
+    max-width: 1400px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 12px;
+  }
 
-        .card {
-            background: #fff;
-            border: 1px solid #ddd;
-            padding: 12px;
-            display: grid;
-            gap: 8px;
-            place-items: center;
-            text-align: center;
-        }
+  .card {
+    background: #fff;
+    border: 1px solid #ddd;
+    padding: 12px;
+    display: grid;
+    gap: 8px;
+    place-items: center;
+    text-align: center;
+  }
 
-        .title {
-            font-weight: bold;
-            font-size: 0.9em;
-        }
+  .title {
+    font-weight: bold;
+    font-size: 0.9em;
+  }
 
-        .label {
-            font-size: 0.7em;
-            text-transform: uppercase;
-            color: #666;
-        }
+  .label {
+    font-size: 0.7em;
+    text-transform: uppercase;
+    color: #666;
+  }
 
-        .block {
-            height: 70px;
-            display: grid;
-            place-items: center;
-            font-size: 1.4em;
-        }
-    </style>
+  .block {
+    height: 70px;
+    display: grid;
+    place-items: center;
+    font-size: 1.4em;
+  }
+
+  .img-wrap {
+    width: 100%;
+    height: 180px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+    background: #eee;
+  }
+
+  .img-wrap img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    filter: drop-shadow(1px 1px 2px #00000080);
+  }
+</style>
 </head>
-
 <body>
 
-    <h2>Awards Countdown Grid</h2>
+<h2>Awards Countdown Grid</h2>
+<div class="grid" id="grid"></div>
 
-    <div class="grid" id="grid"></div>
+<script>
+const params = new URLSearchParams(window.location.search);
+const CODE = params.get("code") || "hkb";
+const CACHE_TTL = 7 * 24 * 60 * 60 * 1000;
 
-    <script>
-        /* =====================================================
-           PARAMS
-        ===================================================== */
-        const params = new URLSearchParams(window.location.search);
-        const CODE = params.get("code") || "sbr";
-        const CACHE_TTL = 7 * 24 * 60 * 60 * 1000;
+// Countdown helper
+function startCountdown(dateString, el, doneText) {
+  const target = new Date(dateString).getTime();
+  if (isNaN(target)) { el.textContent = doneText; return; }
 
-        /* =====================================================
-           HELPERS
-        ===================================================== */
-        function startCountdown(dateString, el, doneText) {
-            const target = new Date(dateString).getTime();
-            if (isNaN(target)) {
-                el.textContent = doneText;
-                return;
-            }
+  function tick() {
+    const diff = target - Date.now();
+    if (diff <= 0) { el.textContent = doneText; return; }
+    const d = Math.floor(diff / 86400000),
+          h = Math.floor(diff / 3600000) % 24,
+          m = Math.floor(diff / 60000) % 60,
+          s = Math.floor(diff / 1000) % 60;
+    el.textContent = `${d}d ${h}h ${m}m ${s}s`;
+    setTimeout(tick, 1000 - (Date.now() % 1000));
+  }
+  tick();
+}
 
-            function tick() {
-                const diff = target - Date.now();
-                if (diff <= 0) {
-                    el.textContent = doneText;
-                    return;
-                }
+// Fetch awards JSON
+async function loadAwards() {
+  const config = await fetch("data.json").then(r => r.json());
+  const site = config[CODE];
+  if(!site?.url) throw new Error("Invalid code");
+  return fetch(site.url + "/node/content-menu/awards.json?cache=false").then(r => r.json());
+}
 
-                const d = Math.floor(diff / 86400000);
-                const h = Math.floor(diff / 3600000) % 24;
-                const m = Math.floor(diff / 60000) % 60;
-                const s = Math.floor(diff / 1000) % 60;
+// Fetch images from /awards page
+async function fetchAwardImages() {
+  try {
+    const html = await fetch("https://hongkongbusiness.hk/awards").then(r => r.text());
+    const doc = new DOMParser().parseFromString(html, "text/html");
+    const imgs = Array.from(doc.querySelectorAll('img.lazyload[loading="lazy"][data-srcset]'));
+    return imgs.map(img => img.getAttribute('data-srcset').split(' ')[0]);
+  } catch(e) {
+    console.warn("Failed to fetch award images:", e);
+    return [];
+  }
+}
 
-                el.textContent = `${d}d ${h}h ${m}m ${s}s`;
-                setTimeout(tick, 1000 - (Date.now() % 1000));
-            }
+// Pre-fetch dates for each award
+async function fetchAwardDates(award) {
+  const [startDate, endDate] = await Promise.all([
+    fetchNodeDate(award.view_node, "div.date.start-date", "start-" + award.view_node),
+    fetchNodeDate(award.view_node, "div.date.end-date", "end-" + award.view_node)
+  ]);
+  return { ...award, startDate, endDate };
+}
 
-            tick();
-        }
+// Fetch node date with caching
+async function fetchNodeDate(url, selector, cacheKey) {
+  const cached = localStorage.getItem(cacheKey);
+  if(cached) {
+    const { date, expiry } = JSON.parse(cached);
+    if(Date.now() < expiry) return date;
+  }
 
-        async function fetchNodeDate(url, selector, cacheKey) {
-            const cached = localStorage.getItem(cacheKey);
-            if (cached) {
-                const { date, expiry } = JSON.parse(cached);
-                if (Date.now() < expiry) return date;
-            }
+  try {
+    const html = await fetch(url).then(r => r.text());
+    const doc = new DOMParser().parseFromString(html, "text/html");
+    const el = doc.querySelector(selector);
+    const raw = el?.getAttribute("date");
+    const iso = raw ? new Date(raw).toISOString() : null;
 
-            try {
-                const html = await fetch(url).then(r => r.text());
-                const doc = new DOMParser().parseFromString(html, "text/html");
-                const el = doc.querySelector(selector);
-                const raw = el?.getAttribute("date");
-                const iso = raw ? new Date(raw).toISOString() : null;
+    if(iso) {
+      localStorage.setItem(cacheKey, JSON.stringify({ date: iso, expiry: Date.now() + CACHE_TTL }));
+    }
+    return iso;
+  } catch {
+    return null;
+  }
+}
 
-                if (iso) {
-                    localStorage.setItem(cacheKey, JSON.stringify({
-                        date: iso,
-                        expiry: Date.now() + CACHE_TTL
-                    }));
-                }
+// Render the grid
+async function renderGrid() {
+  const grid = document.getElementById("grid");
+  let awards = await loadAwards();
 
-                return iso;
-            } catch {
-                return null;
-            }
-        }
+  // Fetch images from /awards page
+  const imgUrls = await fetchAwardImages();
 
-        /* =====================================================
-           LOAD DATA.JSON → AWARDS.JSON
-        ===================================================== */
-        async function loadAwards() {
-            const config = await fetch("data.json").then(r => r.json());
-            const site = config[CODE];
-            if (!site?.url) throw new Error("Invalid code");
+  // Map images to awards by index
+  awards = await Promise.all(awards.map((award, i) => fetchAwardDates({...award, imgUrl: imgUrls[i] || ""})));
 
-            return fetch(site.url + "/node/content-menu/awards.json?cache=false")
-                .then(r => r.json());
-        }
+  // Sort by award date
+  awards.sort((a,b) => new Date(a.field_date) - new Date(b.field_date));
 
-        /* =====================================================
-           RENDER GRID
-        ===================================================== */
-        async function renderGrid() {
-            const grid = document.getElementById("grid");
-            const awards = await loadAwards();
-
-            // SORT AWARDS BY DATE (earliest first)
-            awards.sort((a, b) => new Date(a.field_date) - new Date(b.field_date));
-
-            awards.forEach(async award => {
-                const card = document.createElement("div");
-                card.className = "card";
-
-                card.innerHTML = `
+  awards.forEach(award => {
+    const card = document.createElement("div");
+    card.className = "card";
+    card.innerHTML = `
+      <div class="img-wrap"><img src="${award.imgUrl}" alt="${award.title}"></div>
       <div class="title">${award.title}</div>
-
-      <div class="label">Submission Start</div>
-      <div class="block start">Loading…</div>
-
-      <div class="label">Submission End</div>
-      <div class="block end">Loading…</div>
-
-      <div class="label">Award Date</div>
-      <div class="block main">Loading…</div>
+      <div class="label">Submission Start</div><div class="block start">Loading…</div>
+      <div class="label">Submission End</div><div class="block end">Loading…</div>
+      <div class="label">Award Date</div><div class="block main">Loading…</div>
     `;
+    grid.appendChild(card);
 
-                grid.appendChild(card);
+    startCountdown(award.startDate || award.field_date, card.querySelector(".start"), "Started");
+    startCountdown(award.endDate || award.field_date, card.querySelector(".end"), "Ended");
+    startCountdown(award.field_date, card.querySelector(".main"), "DONE");
+  });
+}
 
-                const startEl = card.querySelector(".start");
-                const endEl = card.querySelector(".end");
-                const mainEl = card.querySelector(".main");
-
-                // Element 3 — main award date
-                startCountdown(award.field_date, mainEl, "DONE");
-
-                // Element 1 — submission start
-                const startDate = await fetchNodeDate(
-                    award.view_node,
-                    "div.date.start-date",
-                    "start-" + award.view_node
-                );
-
-                startDate
-                    ? startCountdown(startDate, startEl, "Started")
-                    : startEl.textContent = "Started";
-
-                // Element 2 — submission end
-                const endDate = await fetchNodeDate(
-                    award.view_node,
-                    "div.date.end-date",
-                    "end-" + award.view_node
-                );
-
-                endDate
-                    ? startCountdown(endDate, endEl, "Ended")
-                    : endEl.textContent = "Ended";
-            });
-        }
-
-        renderGrid();
-    </script>
-
+renderGrid();
+</script>
 </body>
-
 </html>
