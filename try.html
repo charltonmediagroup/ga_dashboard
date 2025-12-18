@@ -2,17 +2,26 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Extract Nomination Dates</title>
+<title>Lazyload Image Viewer</title>
+
+<style>
+    img.preview {
+        max-width: 100%;
+        margin-bottom: 20px;
+        border: 1px solid #ccc;
+        padding: 4px;
+    }
+</style>
 </head>
 <body>
-<h2>Nomination Start and End Dates</h2>
 
-<pre id="result" style="white-space: pre-wrap; border: 1px solid #ccc; padding: 10px;"></pre>
+<h2>Extracted Images</h2>
+<div id="result"></div>
 
 <script>
 (async () => {
-    const url = 'https://sbr.com.sg/event/sbr-technology-excellence-awards'; // <-- put your URL here
-    const result = document.getElementById('result');
+    const url = 'https://sbr.com.sg/awards'; // <-- put your URL here
+    const container = document.getElementById('result');
 
     try {
         const response = await fetch(url, { method: 'GET', mode: 'cors' });
@@ -22,25 +31,33 @@
         const parser = new DOMParser();
         const doc = parser.parseFromString(html, 'text/html');
 
-        // Get the nomination-date div
-        const nominationDiv = doc.querySelector('div.nomination-date');
+        // Select ONLY lazyload images with data-srcset
+        const images = doc.querySelectorAll(
+            'img.lazyload[loading="lazy"][data-srcset]'
+        );
 
-        if (!nominationDiv) {
-            result.textContent = 'Nomination section not found';
+        if (images.length === 0) {
+            container.textContent = 'No matching images found';
             return;
         }
 
-        const startDiv = nominationDiv.querySelector('div.date.start-date');
-        const endDiv = nominationDiv.querySelector('div.date.end-date');
+        images.forEach(img => {
+            // data-srcset usually looks like: "URL 1920w"
+            const srcset = img.getAttribute('data-srcset');
+            const imageUrl = srcset.split(' ')[0];
 
-        const startDate = startDiv ? startDiv.getAttribute('date') : 'Not found';
-        const endDate = endDiv ? endDiv.getAttribute('date') : 'Not found';
+            const newImg = document.createElement('img');
+            newImg.src = imageUrl;
+            newImg.className = 'preview';
 
-        result.textContent = `Nomination Start Date: ${startDate}\nNomination End Date: ${endDate}`;
+            container.appendChild(newImg);
+        });
+
     } catch (error) {
-        result.textContent = 'Error fetching HTML: ' + error;
+        container.textContent = 'Error: ' + error;
     }
 })();
 </script>
+
 </body>
 </html>
