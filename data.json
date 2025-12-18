@@ -28,7 +28,8 @@
         "exclusivesUrl": "https://asianbankingandfinance.net/news-feed.xml",
         "latestVideosUrl": "https://dev.asianbankingandfinance.net/latest-videos.xml",
         "color": "#074782",
-        "showcase_id": "12016591"
+        "showcase_id": "12016591",
+        "shorts_showcase_id": "12028608"
     },
     "ia": {
         "name": "Insurance Asia",
@@ -44,7 +45,8 @@
         "rssUrl": "https://retailasia.com/news-feed.xml",
         "exclusivesUrl": "https://retailasia.com/news-feed.xml",
         "color": "#3D075F",
-        "showcase_id": "12016596"
+        "showcase_id": "12016596",
+        "shorts_showcase_id": "12028583"
     },
     "hca": {
         "name": "Healthcare Asia",
@@ -52,7 +54,8 @@
         "rssUrl": "https://healthcareasiamagazine.com/news-feed.xml",
         "exclusivesUrl": "https://healthcareasiamagazine.com/news-feed.xml",
         "color": "#EF141A",
-        "showcase_id": "12016597"
+        "showcase_id": "12016597",
+        "shorts_showcase_id": "12028569"
     },
     "ap": {
         "name": "Asian Power",
