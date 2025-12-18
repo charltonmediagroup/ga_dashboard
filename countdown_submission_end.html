@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Countdown Timer Submission End</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: transparent;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      place-items: center;
+      height: 100vh;
+    }
+
+    #countdown {
+      color: black;
+      text-align: center;
+      font-size: 3em;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="countdown">Loading…</div>
+
+  <script>
+    const CACHE_TTL = 7 * 24 * 60 * 60 * 1000; // 7 days
+
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get("code") || "sbr";
+    const awardName = params.get("name");
+    const fontSizeParam = params.get("fontsize");
+    const forceRefresh = params.get("cache") === "false";
+
+    const countdownElement = document.getElementById("countdown");
+    countdownElement.style.fontSize = fontSizeParam || "3em";
+
+    if (!awardName) {
+      countdownElement.textContent = "No award name provided.";
+      throw new Error("Missing name parameter");
+    }
+
+    // =============================
+    // Load data.json
+    // =============================
+    fetch("data.json")
+      .then(res => res.json())
+      .then(config => {
+        const site = config[code];
+        if (!site?.url) throw new Error("Invalid code");
+        return fetch(site.url + "/node/content-menu/awards.json");
+      })
+      .then(res => res.json())
+      .then(items => {
+        const award = items.find(item => item.title?.trim() === awardName.trim());
+        if (!award?.view_node) throw new Error("view_node not found");
+        return fetchAwardEndDate(award.view_node);
+      })
+      .then(endDateISO => {
+        if (!endDateISO) {
+          countdownElement.textContent = "Submission Ended";
+          return;
+        }
+        startCountdown(endDateISO, countdownElement);
+      })
+      .catch(err => {
+        console.error(err);
+        countdownElement.textContent = "Submission Ended";
+      });
+
+    // =============================
+    // Cache fetch function
+    // =============================
+    async function cacheFetch(key, url, ttl = CACHE_TTL) {
+      if (forceRefresh) {
+        localStorage.removeItem(key);
+      } else {
+        const cached = localStorage.getItem(key);
+        if (cached) {
+          const { data, expiry } = JSON.parse(cached);
+          if (Date.now() < expiry) return data;
+        }
+      }
+
+      const response = await fetch(url);
+      const html = await response.text();
+      localStorage.setItem(key, JSON.stringify({ data: html, expiry: Date.now() + ttl }));
+      return html;
+    }
+
+    // =============================
+    // Fetch end date from HTML
+    // =============================
+    async function fetchAwardEndDate(url) {
+      try {
+        const html = await cacheFetch(`award-end-${url}`, url, CACHE_TTL);
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, "text/html");
+
+        const endDiv = doc.querySelector("div.date.end-date");
+        const rawDate = endDiv?.getAttribute("date");
+
+        if (!rawDate) return null;
+        return convertToISO(rawDate);
+      } catch (e) {
+        return null;
+      }
+    }
+
+    // =============================
+    // Convert "Jan 23 2026 23:59:00"
+    // → "2026-01-23T23:59:00"
+    // =============================
+    function convertToISO(dateStr) {
+      const d = new Date(dateStr);
+      if (isNaN(d)) return null;
+
+      return d.getFullYear() + "-" +
+        String(d.getMonth() + 1).padStart(2, "0") + "-" +
+        String(d.getDate()).padStart(2, "0") + "T" +
+        String(d.getHours()).padStart(2, "0") + ":" +
+        String(d.getMinutes()).padStart(2, "0") + ":" +
+        String(d.getSeconds()).padStart(2, "0");
+    }
+
+    // =============================
+    // Countdown logic
+    // =============================
+    function startCountdown(dateString) {
+      const targetTime = new Date(dateString).getTime();
+
+      while (Date.now() % 1000 != 0) {
+        // wait for the next full second
+      }
+
+      if (isNaN(targetTime)) {
+        countdownElement.textContent = "Invalid date.";
+        return;
+      }
+
+      const timer = setInterval(() => {
+        const diff = targetTime - Date.now();
+
+        if (diff <= 0) {
+          clearInterval(timer);
+          displayElement.textContent = "Submission Ended";
+          return;
+        }
+
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+        const minutes = Math.floor((diff / (1000 * 60)) % 60);
+        const seconds = Math.floor((diff / 1000) % 60);
+
+        countdownElement.textContent = `${days}d ${hours}h ${minutes}m ${seconds}s`;
+      }, 1000);
+    }
+  </script>
+</body>
+
+</html>

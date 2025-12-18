@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Countdown Timer Submission Start</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: transparent;
+      margin: 0;
+      padding: 0;
+      display: grid;
+      place-items: center;
+      height: 100vh;
+    }
+
+    #countdown {
+      color: black;
+      text-align: center;
+      font-size: 3em;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="countdown">Loading…</div>
+
+  <script>
+    const CACHE_TTL = 7 * 24 * 60 * 60 * 1000; // 7 days
+
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get("code") || "sbr";
+    const awardName = params.get("name");
+    const fontSizeParam = params.get("fontsize");
+    const forceRefresh = params.get("cache") === "false";
+
+    const countdownElement = document.getElementById("countdown");
+    countdownElement.style.fontSize = fontSizeParam || "3em";
+
+    if (!awardName) {
+      countdownElement.textContent = "No award name provided.";
+      throw new Error("Missing name parameter");
+    }
+
+    // =============================
+    // Load data.json
+    // =============================
+    fetch("data.json")
+      .then(res => res.json())
+      .then(config => {
+        const site = config[code];
+        if (!site?.url) throw new Error("Invalid code");
+        return fetch(site.url + "/node/content-menu/awards.json");
+      })
+      .then(res => res.json())
+      .then(items => {
+        const award = items.find(item => item.title?.trim() === awardName.trim());
+        if (!award?.view_node) throw new Error("view_node not found");
+        return getCachedStartDate(award.view_node);
+      })
+      .then(startDateISO => {
+        if (!startDateISO) {
+          countdownElement.textContent = "Submission Started";
+          return;
+        }
+        startCountdown(startDateISO, countdownElement);
+      })
+      .catch(err => {
+        console.error(err);
+        countdownElement.textContent = "Submission Started";
+      });
+
+    // =============================
+    // Cache only the start date
+    // =============================
+    async function getCachedStartDate(url) {
+      const cacheKey = `award-start-date-${url}`;
+
+      if (forceRefresh) {
+        localStorage.removeItem(cacheKey);
+      } else {
+        const cached = localStorage.getItem(cacheKey);
+        if (cached) {
+          const { date, expiry } = JSON.parse(cached);
+          if (Date.now() < expiry) return date;
+        }
+      }
+
+      // Fetch and parse the date
+      try {
+        const response = await fetch(url);
+        const html = await response.text();
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, "text/html");
+
+        const startDiv = doc.querySelector("div.date.start-date");
+        const rawDate = startDiv?.getAttribute("date");
+        if (!rawDate) return null;
+
+        const isoDate = convertToISO(rawDate);
+        localStorage.setItem(cacheKey, JSON.stringify({ date: isoDate, expiry: Date.now() + CACHE_TTL }));
+        return isoDate;
+      } catch (e) {
+        return null;
+      }
+    }
+
+    // =============================
+    // Convert "Jan 23 2026 23:59:00" → ISO
+    // =============================
+    function convertToISO(dateStr) {
+      const d = new Date(dateStr);
+      if (isNaN(d)) return null;
+
+      return d.getFullYear() + "-" +
+        String(d.getMonth() + 1).padStart(2, "0") + "-" +
+        String(d.getDate()).padStart(2, "0") + "T" +
+        String(d.getHours()).padStart(2, "0") + ":" +
+        String(d.getMinutes()).padStart(2, "0") + ":" +
+        String(d.getSeconds()).padStart(2, "0");
+    }
+
+    // =============================
+    // Countdown logic
+    // =============================
+    function startCountdown(dateString, displayElement) {
+      const targetTime = new Date(dateString).getTime();
+      if (isNaN(targetTime)) {
+        displayElement.textContent = "Invalid date.";
+        return;
+      }
+
+      function update() {
+        const now = Date.now();
+        const diff = targetTime - now;
+
+        if (diff <= 0) {
+          displayElement.textContent = "Submission Started";
+          return;
+        }
+
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+        const minutes = Math.floor((diff / (1000 * 60)) % 60);
+        const seconds = Math.floor((diff / 1000) % 60);
+
+        displayElement.textContent = `${days}d ${hours}h ${minutes}m ${seconds}s`;
+
+        // Schedule next update exactly at the next second
+        const nextTick = 1000 - (now % 1000);
+        setTimeout(update, nextTick);
+      }
+
+      update(); // start immediately
+    }
+
+  </script>
+</body>
+
+</html>
