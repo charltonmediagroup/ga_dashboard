@@ -23,6 +23,7 @@
             width: 800px;
             max-width: 100%;
             border-collapse: collapse;
+            font-family: roboto, sans-serif;
             table-layout: fixed;
             /* Font size will be set dynamically via JS */
         }
@@ -43,9 +44,7 @@
 
         th.views,
         td.views {
-            text-align: right;
-            color: #888;
-            width: 100px;
+            display: none;
         }
     </style>
 </head>
@@ -84,11 +83,12 @@
                 const config = await configRes.json();
 
                 const site = config[code] || config["sbr"];
-                if (!site || !site.url) throw new Error("URL not found in data.json");
+                if (!site || !site.url) throw new Error("url not found in data.json");
 
                 const timestamp = Date.now();
                 const dynamicParamName = `ts${timestamp}`;
                 const url = `${site.url.replace(/\/$/, '')}/top-read-feed.xml?${dynamicParamName}=${timestamp}`;
+                console.log("Fetching URL:", url);
 
                 const xmlRes = await fetch(url);
                 if (!xmlRes.ok) throw new Error("Failed to fetch RSS XML");
@@ -99,7 +99,7 @@
                 const items = Array.from(xml.querySelectorAll("item"));
 
                 if (!items.length) {
-                    showMessage("No items found in the feed.");
+                    document.getElementById("titles-table").textContent = "No items found in the feed.";
                     return;
                 }
 
@@ -118,11 +118,16 @@
                 const tbody = document.querySelector("#titles-table tbody");
                 feeds.forEach(f => {
                     const tr = document.createElement("tr");
-                    tr.style.height = rowHeight; // Evenly distribute height
 
                     const tdTitle = document.createElement("td");
                     tdTitle.textContent = f.title;
                     tr.appendChild(tdTitle);
+
+                    const tdViews = document.createElement("td");
+                    tdViews.className = "views";
+                    tdViews.textContent = f.views;
+
+                    if (showViews) tr.appendChild(tdViews);
                     tbody.appendChild(tr);
                 });
 
@@ -132,7 +137,7 @@
 
             } catch (err) {
                 console.error(err);
-                showMessage("Failed to load feed.");
+                document.getElementById("titles-table").textContent = "Failed to load feed.";
             }
         })();
     </script>
