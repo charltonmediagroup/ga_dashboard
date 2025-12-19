@@ -10,27 +10,22 @@
             height: 100%;
             margin: 0;
             overflow: hidden;
-            /* Remove overall scrollbars */
         }
 
         body {
             display: flex;
             flex-direction: column;
             justify-content: flex-start;
-            /* Align table at top */
             align-items: center;
-            /* Center table horizontally */
         }
 
         table {
             width: 800px;
-            /* Fixed table width */
             max-width: 100%;
-            /* Responsive: don't exceed screen width */
             border-collapse: collapse;
             font-family: roboto, sans-serif;
             table-layout: fixed;
-            /* Important for ellipsis to work */
+            /* Font size will be set dynamically via JS */
         }
 
         th,
@@ -38,11 +33,8 @@
             padding: 8px 12px;
             border: 1px solid #ccc;
             white-space: nowrap;
-            /* Prevent wrapping */
             overflow: hidden;
-            /* Hide overflow */
             text-overflow: ellipsis;
-            /* Show ... for overflow */
         }
 
         th {
@@ -55,7 +47,6 @@
             text-align: right;
             color: #888;
             width: 100px;
-            /* Fixed width column for views */
         }
     </style>
 </head>
@@ -76,14 +67,22 @@
     <script>
         (async () => {
             try {
-                const configRes = await fetch("data.json");
-                if (!configRes.ok) throw new Error("Failed to load data.json");
-                const config = await configRes.json();
-
+                // Get URL parameters
                 const params = new URLSearchParams(window.location.search);
                 const code = params.get("code") || "sbr";
                 const showViewsParam = params.get("show-views");
                 const showViews = showViewsParam === "1" || showViewsParam?.toLowerCase() === "true";
+                const fontSize = params.get("fontsize"); // Get fontsize parameter
+
+                // Apply font size if provided
+                if (fontSize) {
+                    document.querySelector("#titles-table").style.fontSize = fontSize + "px";
+                }
+
+                // Fetch config
+                const configRes = await fetch("data.json");
+                if (!configRes.ok) throw new Error("Failed to load data.json");
+                const config = await configRes.json();
 
                 const site = config[code] || config["sbr"];
                 if (!site || !site.url) throw new Error("url not found in data.json");
