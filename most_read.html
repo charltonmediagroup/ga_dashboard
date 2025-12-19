@@ -9,21 +9,28 @@
         body {
             height: 100%;
             margin: 0;
-            overflow: hidden; /* Remove overall scrollbars */
+            overflow: hidden;
+            /* Remove overall scrollbars */
         }
 
         body {
             display: flex;
             flex-direction: column;
-            justify-content: flex-start; /* Align table at top */
-            align-items: stretch; /* Stretch table to container width */
+            justify-content: flex-start;
+            /* Align table at top */
+            align-items: center;
+            /* Center table horizontally */
         }
 
         table {
-            width: 100%;
+            width: 800px;
+            /* Fixed table width */
+            max-width: 100%;
+            /* Responsive: don't exceed screen width */
             border-collapse: collapse;
             font-family: roboto, sans-serif;
-            table-layout: auto;
+            table-layout: fixed;
+            /* Important for ellipsis to work */
         }
 
         th,
@@ -31,8 +38,11 @@
             padding: 8px 12px;
             border: 1px solid #ccc;
             white-space: nowrap;
+            /* Prevent wrapping */
             overflow: hidden;
+            /* Hide overflow */
             text-overflow: ellipsis;
+            /* Show ... for overflow */
         }
 
         th {
@@ -44,15 +54,8 @@
         td.views {
             text-align: right;
             color: #888;
-            width: 100px; /* fixed width */
-        }
-
-        /* Optional: Make table content wrap if necessary */
-        td {
-            white-space: normal;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;            
+            width: 100px;
+            /* Fixed width column for views */
         }
     </style>
 </head>
@@ -61,7 +64,7 @@
     <table id="titles-table">
         <thead>
             <tr>
-                <th>Title</th>
+                <th>Top 10 News Last 7 Days</th>
                 <th class="views">Views</th>
             </tr>
         </thead>
