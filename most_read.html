@@ -1,10 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <title>Top Read Titles</title>
     <style>
-        html, body {
+        html,
+        body {
             height: 100%;
             margin: 0;
         }
@@ -15,16 +17,21 @@
         }
 
         table {
-            flex: 1;
+            flex: 0;
             width: 100%;
             border-collapse: collapse;
             font-family: roboto, sans-serif;
-            table-layout: fixed;
+            table-layout: auto;
         }
 
-        th, td {
+        th,
+        td {
             padding: 8px 12px;
             border: 1px solid #ccc;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+
         }
 
         th {
@@ -32,13 +39,16 @@
             text-align: left;
         }
 
-        th.views, td.views {
+        th.views,
+        td.views {
             text-align: right;
             color: #888;
-            width: 100px; /* fixed width */
+            width: 100px;
+            /* fixed width */
         }
     </style>
 </head>
+
 <body>
     <table id="titles-table">
         <thead>
@@ -94,7 +104,7 @@
                 const DC_NAMESPACE = "http://purl.org/dc/elements/1.1/";
                 const feeds = items.map(item => {
                     const dcElem = item.getElementsByTagNameNS(DC_NAMESPACE, "creator")[0]
-                                   || item.getElementsByTagName("dc:creator")[0];
+                        || item.getElementsByTagName("dc:creator")[0];
                     return {
                         title: item.querySelector("title")?.textContent.trim() || "Untitled",
                         views: parseInt(dcElem?.textContent.trim() || "0", 10)
@@ -133,4 +143,5 @@
         })();
     </script>
 </body>
+
 </html>
