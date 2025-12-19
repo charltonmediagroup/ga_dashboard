@@ -38,6 +38,7 @@
         "url": "https://insuranceasia.com/",
         "rssUrl": "https://insuranceasia.com/news-feed.xml",
         "exclusivesUrl": "https://insuranceasia.com/exclusive-news-feed.xml",
+        "latestVideosUrl": "https://insuranceasia.com/latest-videos.xml",
         "color": "#D41721",
         "showcase_id": "12016593",
         "shorts_showcase_id": "12028614"
@@ -47,6 +48,7 @@
         "url": "https://retailasia.com/",
         "rssUrl": "https://retailasia.com/news-feed.xml",
         "exclusivesUrl": "https://retailasia.com/exclusive-news-feed.xml",
+        "latestVideosUrl": "https://retailasia.com/latest-videos.xml",
         "color": "#3D075F",
         "showcase_id": "12016596",
         "shorts_showcase_id": "12028583"
@@ -56,6 +58,7 @@
         "url": "https://healthcareasiamagazine.com/",
         "rssUrl": "https://healthcareasiamagazine.com/news-feed.xml",
         "exclusivesUrl": "https://healthcareasiamagazine.com/exclusive-news-feed.xml",
+        "latestVideosUrl": "https://healthcareasiamagazine.com/latest-videos.xml",
         "color": "#EF141A",
         "showcase_id": "12016597",
         "shorts_showcase_id": "12028569"
@@ -65,6 +68,7 @@
         "url": "https://asian-power.com/",
         "rssUrl": "https://asian-power.com/news-feed.xml",
         "exclusivesUrl": "https://asian-power.com/exclusive-news-feed.xml",
+        "latestVideosUrl": "https://asian-power.com/latest-videos.xml",
         "color": "#F48222",
         "showcase_id": "12016598",
         "shorts_showcase_id": "12028649"
@@ -74,6 +78,7 @@
         "url": "https://qsrmedia.com/",
         "rssUrl": "https://qsrmedia.com/news-feed.xml",
         "exclusivesUrl": "https://qsrmedia.com/exclusive-news-feed.xml",
+        "latestVideosUrl": "https://qsrmedia.com/latest-videos.xml",
         "color": "#AA1E23",
         "showcase_id": "12018448"
     },
@@ -82,6 +87,7 @@
         "url": "https://qsrmedia.asia/",
         "rssUrl": "https://qsrmedia.asia/news-feed.xml",
         "exclusivesUrl": "https://qsrmedia.asia/exclusive-news-feed.xml",
+        "latestVideosUrl": "https://qsrmedia.asia/latest-videos.xml",
         "color": "#AA1E23",
         "showcase_id": "12018507"
     },
@@ -90,6 +96,7 @@
         "url": "https://qsrmedia.com.au/",
         "rssUrl": "https://qsrmedia.com.au/news-feed.xml",
         "exclusivesUrl": "https://qsrmedia.com.au/exclusive-news-feed.xml",
+        "latestVideosUrl": "https://qsrmedia.com.au/latest-videos.xml",
         "color": "#AA1E23",
         "showcase_id": "12018440",
         "awards_showcase_id": "12023216",
@@ -100,6 +107,7 @@
         "url": "https://qsrmedia.co.uk/",
         "rssUrl": "https://qsrmedia.co.uk/news-feed.xml",
         "exclusivesUrl": "https://qsrmedia.co.uk/exclusive-news-feed.xml",
+        "latestVideosUrl": "https://qsrmedia.co.uk/latest-videos.xml",
         "color": "#AA1E23",
         "showcase_id": "12018444",
         "awards_showcase_id": "12023215",

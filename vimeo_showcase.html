@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Fullscreen 16:9 Vimeo Rotating Videos</title>
+  <style>
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      justify-content: start;
+      align-items: center;
+      background: transparent;
+      font-family: Arial, sans-serif;
+    }
+
+    #wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: start;
+      width: 100%;
+      height: 100%;
+    }
+
+    /* Video + title container */
+    #video-container {
+      width: 100%;
+      max-width: 1920px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    /* 16:9 video container */
+    #video-area {
+      position: relative;
+      width: 100%;
+      padding-top: 56.25%;
+      /* 16:9 */
+      background: transparent;
+      overflow: hidden;
+    }
+
+    .video-layer {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      border: 0;
+      opacity: 0;
+      transition: opacity 1s ease-in-out;
+      z-index: 0;
+    }
+
+    .active {
+      opacity: 1;
+      z-index: 1;
+    }
+
+    /* Title strictly matches video width */
+    #title {
+      width: 100%;
+      /* exactly the video width */
+      max-height: 3em;
+      /* 2 lines */
+      font-size: 2vw;
+      font-weight: bold;
+      color: black;
+      text-align: center;
+      line-height: 1.5em;
+      overflow: hidden;
+      word-break: break-word;
+      white-space: normal;
+      margin-top: 10px;
+      box-sizing: border-box;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="wrapper">
+    <div id="video-container">
+      <div id="video-area">
+        <iframe id="videoA" class="video-layer" allow="autoplay; fullscreen"></iframe>
+        <iframe id="videoB" class="video-layer" allow="autoplay; fullscreen"></iframe>
+      </div>
+      <div id="title"></div>
+    </div>
+  </div>
+
+  <script>
+    const ACCESS_TOKEN = "88cadcb6cfe963cdf4fd0631692cd179";
+    let showcase_id = "12016539";
+
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get("code") || "sbr";
+    const display_time = parseInt(params.get("duration")) || 30; // seconds
+
+    fetch("data.json")
+      .then(res => {
+        if (!res.ok) throw new Error("Failed to load data.json");
+        return res.json();
+      })
+      .then(config => {
+        const site = config[code] || config["sbr"];
+
+        if (!site) {
+          throw new Error("No matching entry found in data.json");
+        }
+
+        if (site.showcase_id) {
+          showcase_id = site.showcase_id;
+        }
+
+        console.log("Using showcase_id:", showcase_id);
+
+        loadVideos();
+      })
+      .catch(err => console.error(err));
+
+
+    let videos = [];
+    let currentIndex = (parseInt(params.get("start")) - 1) || 0;
+    let showingA = true;
+
+    const iframeA = document.getElementById("videoA");
+    const iframeB = document.getElementById("videoB");
+    const titleBox = document.getElementById("title");
+
+
+    function loadVideos() {
+      console.log("Fetching videos from Vimeo showcase ID:", showcase_id);
+
+      fetch(`https://api.vimeo.com/albums/${showcase_id}/videos?per_page=20`, {
+        headers: { Authorization: `Bearer ${ACCESS_TOKEN}` }
+      })
+        .then(res => res.json())
+        .then(data => {
+          videos = data.data;
+          if (!videos.length) return;
+
+          loadInto(iframeA, videos[currentIndex % videos.length]);
+          iframeA.classList.add("active");
+          titleBox.textContent = videos[currentIndex % videos.length].name;
+
+          const nextIndex = (currentIndex + 1) % videos.length;
+          loadInto(iframeB, videos[nextIndex]);
+
+          setInterval(nextVideo, display_time * 1000);
+        })};
+
+    function loadInto(iframe, videoData) {
+      const id = videoData.uri.split("/")[2];
+      iframe.src = `https://player.vimeo.com/video/${id}?autoplay=1&muted=1&loop=0&background=1&transparent=1`;
+    }
+
+    function nextVideo() {
+      currentIndex = (currentIndex + 1) % videos.length;
+      const nextIndex = (currentIndex + 1) % videos.length;
+      const nextVideoData = videos[currentIndex];
+
+      // Fade title
+      titleBox.style.opacity = 0;
+      setTimeout(() => {
+        titleBox.textContent = nextVideoData.name;
+        titleBox.style.opacity = 1;
+      }, 200);
+
+      if (showingA) {
+        iframeB.classList.add("active");
+        iframeA.classList.remove("active");
+        loadInto(iframeA, videos[nextIndex]);
+      } else {
+        iframeA.classList.add("active");
+        iframeB.classList.remove("active");
+        loadInto(iframeB, videos[nextIndex]);
+      }
+
+      showingA = !showingA;
+    }
+  </script>
+</body>
+
+</html>
