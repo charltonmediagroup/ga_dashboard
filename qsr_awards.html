@@ -18,31 +18,28 @@
             max-width: 1400px;
             margin: 0 auto;
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
-            grid-template-rows: repeat(auto-fit, minmax(10px, 1fr));
-            gap: 8px;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 16px;
+            align-items: start;
         }
 
         .card {
-            display: grid;
-            gap: 5px;
-            place-items: center;
-            text-align: center;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            text-align: left;
         }
 
         .block {
-            height: fit-content;
-            padding: 1px 1px;
-            display: grid;
-            place-items: center;
+            padding: 2px 0;
             font-size: 15px;
         }
 
         .img-wrap {
             width: 100%;
             display: flex;
-            justify-content: center;
-            align-items: center;
+            justify-content: flex-start;
+            align-items: flex-start;
             overflow: visible;
         }
 
@@ -58,7 +55,7 @@
     <div class="grid" id="grid"></div>
     <script>
         const params = new URLSearchParams(window.location.search);
-        const CODE = params.get("code") || "qsr-aus";
+        const CODE = params.get("code") || "qsr";
         const image_size = params.get("image-size") ? Math.min(parseInt(params.get("image-size")), 100) : 100;
         const rawFont = params.get("font-size");
         let font_size;
@@ -66,14 +63,8 @@
         if (rawFont) {
             const num = parseFloat(rawFont);
             const unitMatch = rawFont.match(/[a-z%]+$/i);
-            if (!isNaN(num)) {
-                font_size = unitMatch ? rawFont : num + "px";
-            } else {
-                font_size = "15px";
-            }
-        } else {
-            font_size = "15px";
-        }
+            font_size = !isNaN(num) ? (unitMatch ? rawFont : num + "px") : "15px";
+        } else font_size = "15px";
 
         function startCountdown(dateString, el, doneText) {
             const target = new Date(dateString).getTime();
@@ -81,12 +72,15 @@
 
             function tick() {
                 const diff = target - Date.now();
-                if (diff <= 0) { el.textContent = doneText; return; }
+                if (diff <= 0) {
+                    el.textContent = doneText;
+                    return;
+                }
                 const d = Math.floor(diff / 86400000),
                     h = Math.floor(diff / 3600000) % 24,
                     m = Math.floor(diff / 60000) % 60,
                     s = Math.floor(diff / 1000) % 60;
-                el.textContent = `${d}d ${h}h ${m}m ${s}s`;
+                el.textContent = `${el.dataset.label}: ${d}d ${h}h ${m}m ${s}s`;
                 setTimeout(tick, 1000 - (Date.now() % 1000));
             }
             tick();
@@ -100,28 +94,26 @@
             return { siteUrl: site.url, awards };
         }
 
-        async function fetchAwardImagesMap(url) {
+        async function fetchAwardImagesMap(siteUrl) {
             try {
-                const html = await fetch(url).then(r => r.text());
+                const html = await fetch(`${siteUrl}/awards`).then(r => r.text());
                 const doc = new DOMParser().parseFromString(html, "text/html");
-
-                // 1️⃣ Try header logo in block__image
-                let imgEl = doc.querySelector(".block__image img");
-                if (imgEl) return imgEl.dataset.src || imgEl.src;
-
-                // 2️⃣ Try favicon / apple-touch-icon
-                const iconEl = doc.querySelector('link[rel="icon"], link[rel="apple-touch-icon"]');
-                if (iconEl) return iconEl.href;
-
-                // 3️⃣ Try Open Graph image
-                const ogEl = doc.querySelector('meta[property="og:image"]');
-                if (ogEl) return ogEl.content;
-
-                // If nothing found
-                return null;
+                const items = Array.from(doc.querySelectorAll('.view-content .item.with-border-bottom'));
+                const map = {};
+                items.forEach(item => {
+                    const linkEl = item.querySelector('.item__title a');
+                    const imgEl = item.querySelector('img.lazyload, img.lazyloaded');
+                    if (linkEl && imgEl) {
+                        const url = linkEl.href.trim();
+                        const title = linkEl.textContent.trim();
+                        const imgUrl = imgEl.getAttribute('data-srcset')?.split(' ')[0] || imgEl.src;
+                        map[url] = { imgUrl, title };
+                    }
+                });
+                return map;
             } catch (e) {
-                console.warn("Failed to fetch logo:", e);
-                return null;
+                console.warn("Failed to fetch award images map:", e);
+                return {};
             }
         }
 
@@ -164,7 +156,6 @@
             }));
 
             awards.sort((a, b) => new Date(a.field_date) - new Date(b.field_date));
-
             const now = Date.now();
 
             awards.forEach(award => {
@@ -175,33 +166,38 @@
                 const endTime = award.endDate ? new Date(award.endDate).getTime() : null;
                 const awardTime = award.field_date ? new Date(award.field_date).getTime() : null;
 
-                // Only submission dates compared with each other
-                const startError = startTime && endTime && startTime > endTime;
-                const endError = endTime && startTime && endTime < startTime;
+                const startBlock = document.createElement("div");
+                startBlock.className = "block start";
+                startBlock.dataset.label = "Nomination Opens";
 
-                // Award error compared to submission dates only
-                const awardError = awardTime && ((startTime && awardTime < startTime) || (endTime && awardTime < endTime));
+                const endBlock = document.createElement("div");
+                endBlock.className = "block end";
+                endBlock.dataset.label = "Nomination Closes";
 
-                card.innerHTML = `
-                    <div class="img-wrap"><img src="${award.imgUrl}" alt="${award.title}"></div>
-                    <div class="block start">${startError ? "ERROR" : (startTime && startTime <= now ? "Submission Started" : "Submission Started")}</div>
-                    <div class="block end">${endError ? "ERROR" : (endTime && endTime <= now ? "Submission Ended" : "Submission End")}</div>
-                    <div class="block main">${awardError ? "ERROR" : (awardTime && awardTime <= now ? "Awards Ended" : "Award Date")}</div>
-                `;
+                const awardBlock = document.createElement("div");
+                awardBlock.className = "block main";
+                awardBlock.dataset.label = "Awards Presentation";
 
-
-                const img = card.querySelector(".img-wrap img");
+                const imgWrap = document.createElement("div");
+                imgWrap.className = "img-wrap";
+                const img = document.createElement("img");
+                img.src = award.imgUrl;
+                img.alt = award.title;
                 img.style.maxWidth = image_size + "%";
                 img.style.height = "auto";
+                imgWrap.appendChild(img);
 
-                const blocks = card.querySelectorAll(".block");
-                blocks.forEach(block => block.style.fontSize = font_size);
+                [startBlock, endBlock, awardBlock].forEach(block => block.style.fontSize = font_size);
 
+                card.appendChild(imgWrap);
+                card.appendChild(startBlock);
+                card.appendChild(endBlock);
+                card.appendChild(awardBlock);
                 grid.appendChild(card);
 
-                if (!startError && startTime) startCountdown(startTime, card.querySelector(".start"), "Submission Started");
-                if (!endError && endTime) startCountdown(endTime, card.querySelector(".end"), "Submission Ended");
-                if (!awardError && awardTime) startCountdown(awardTime, card.querySelector(".main"), "Awards Ended");
+                if (startTime) startCountdown(startTime, startBlock, "Nomination Opened");
+                if (endTime) startCountdown(endTime, endBlock, "Nomination Closed");
+                if (awardTime) startCountdown(awardTime, awardBlock, "Awards Presentation Finished");
             });
         }
 
