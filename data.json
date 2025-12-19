@@ -2,9 +2,7 @@
     "sbr": {
         "name": "Singapore Business Review",
         "url": "https://sbr.com.sg",
-        "rssUrl": "https://sbr.com.sg/news-feed.xml",
         "exclusivesUrl": "https://sbr.com.sg/exclusive-news-feed.xml",
-        "latestVideosUrl": "https://sbr.com.sg/latest-videos.xml",
         "inFocusVideosUrl": "https://dev.sbr.com.sg/in-focus-articles.xml",
         "color": "#FF0000",
         "showcase_id": "12016773",
@@ -14,9 +12,7 @@
     "hkb": {
         "name": "Hong Kong Business",
         "url": "https://hongkongbusiness.hk",
-        "rssUrl": "https://hongkongbusiness.hk/news-feed.xml",
         "exclusivesUrl": "https://hongkongbusiness.hk/exclusive-news-feed.xml",
-        "latestVideosUrl": "https://hongkongbusiness.hk/latest-videos.xml",
         "color": "#FD0C1C",
         "awards_showcase_id": "12016539",
         "showcase_id": "12016575",
@@ -26,9 +22,7 @@
     "abf": {
         "name": "Asian Banking and Finance",
         "url": "https://asianbankingandfinance.net/",
-        "rssUrl": "https://asianbankingandfinance.net/news-feed.xml",
         "exclusivesUrl": "https://asianbankingandfinance.net/exclusive-news-feed.xml",
-        "latestVideosUrl": "https://asianbankingandfinance.net/latest-videos.xml",
         "color": "#074782",
         "showcase_id": "12016591",
         "shorts_showcase_id": "12028608"
@@ -36,9 +30,7 @@
     "ia": {
         "name": "Insurance Asia",
         "url": "https://insuranceasia.com/",
-        "rssUrl": "https://insuranceasia.com/news-feed.xml",
         "exclusivesUrl": "https://insuranceasia.com/exclusive-news-feed.xml",
-        "latestVideosUrl": "https://insuranceasia.com/latest-videos.xml",
         "color": "#D41721",
         "showcase_id": "12016593",
         "shorts_showcase_id": "12028614"
@@ -46,9 +38,7 @@
     "ra": {
         "name": "Retail Asia",
         "url": "https://retailasia.com/",
-        "rssUrl": "https://retailasia.com/news-feed.xml",
         "exclusivesUrl": "https://retailasia.com/exclusive-news-feed.xml",
-        "latestVideosUrl": "https://retailasia.com/latest-videos.xml",
         "color": "#3D075F",
         "showcase_id": "12016596",
         "shorts_showcase_id": "12028583"
@@ -56,9 +46,7 @@
     "hca": {
         "name": "Healthcare Asia",
         "url": "https://healthcareasiamagazine.com/",
-        "rssUrl": "https://healthcareasiamagazine.com/news-feed.xml",
         "exclusivesUrl": "https://healthcareasiamagazine.com/exclusive-news-feed.xml",
-        "latestVideosUrl": "https://healthcareasiamagazine.com/latest-videos.xml",
         "color": "#EF141A",
         "showcase_id": "12016597",
         "shorts_showcase_id": "12028569"
@@ -66,9 +54,7 @@
     "ap": {
         "name": "Asian Power",
         "url": "https://asian-power.com/",
-        "rssUrl": "https://asian-power.com/news-feed.xml",
         "exclusivesUrl": "https://asian-power.com/exclusive-news-feed.xml",
-        "latestVideosUrl": "https://asian-power.com/latest-videos.xml",
         "color": "#F48222",
         "showcase_id": "12016598",
         "shorts_showcase_id": "12028649"
@@ -76,27 +62,21 @@
     "qsr": {
         "name": "QSR Media",
         "url": "https://qsrmedia.com/",
-        "rssUrl": "https://qsrmedia.com/news-feed.xml",
         "exclusivesUrl": "https://qsrmedia.com/exclusive-news-feed.xml",
-        "latestVideosUrl": "https://qsrmedia.com/latest-videos.xml",
         "color": "#AA1E23",
         "showcase_id": "12018448"
     },
     "qsr-asia": {
         "name": "QSR Media Asia",
         "url": "https://qsrmedia.asia/",
-        "rssUrl": "https://qsrmedia.asia/news-feed.xml",
         "exclusivesUrl": "https://qsrmedia.asia/exclusive-news-feed.xml",
-        "latestVideosUrl": "https://qsrmedia.asia/latest-videos.xml",
         "color": "#AA1E23",
         "showcase_id": "12018507"
     },
     "qsr-aus": {
         "name": "QSR Media AUS",
         "url": "https://qsrmedia.com.au/",
-        "rssUrl": "https://qsrmedia.com.au/news-feed.xml",
         "exclusivesUrl": "https://qsrmedia.com.au/exclusive-news-feed.xml",
-        "latestVideosUrl": "https://qsrmedia.com.au/latest-videos.xml",
         "color": "#AA1E23",
         "showcase_id": "12018440",
         "awards_showcase_id": "12023216",
@@ -105,9 +85,7 @@
     "qsr-uk": {
         "name": "QSR Media UK",
         "url": "https://qsrmedia.co.uk/",
-        "rssUrl": "https://qsrmedia.co.uk/news-feed.xml",
         "exclusivesUrl": "https://qsrmedia.co.uk/exclusive-news-feed.xml",
-        "latestVideosUrl": "https://qsrmedia.co.uk/latest-videos.xml",
         "color": "#AA1E23",
         "showcase_id": "12018444",
         "awards_showcase_id": "12023215",

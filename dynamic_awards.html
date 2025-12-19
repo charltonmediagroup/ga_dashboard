@@ -43,14 +43,13 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            overflow: hidden;
-            max-height: 90px;
+            overflow: visible;
         }
 
         .img-wrap img {
             max-width: 100%;
-            max-height: 100%;
-            object-fit: contain;
+            height: auto;
+            width: auto;
             display: block;
         }
     </style>
@@ -61,6 +60,21 @@
     <script>
         const params = new URLSearchParams(window.location.search);
         const CODE = params.get("code") || "sbr";
+        const image_size = params.get("image-size") ? Math.min(parseInt(params.get("image-size")), 100) : 100;
+        const rawFont = params.get("font-size");
+        let font_size;
+
+        if (rawFont) {
+            const num = parseFloat(rawFont);
+            const unitMatch = rawFont.match(/[a-z%]+$/i);
+            if (!isNaN(num)) {
+                font_size = unitMatch ? rawFont : num + "px";
+            } else {
+                font_size = "15px";
+            }
+        } else {
+            font_size = "15px";
+        }
 
         function startCountdown(dateString, el, doneText) {
             const target = new Date(dateString).getTime();
@@ -173,6 +187,14 @@
                     <div class="block end">${endError ? "ERROR" : (endTime && endTime <= now ? "Submission Ended" : "Submission End")}</div>
                     <div class="block main">${awardError ? "ERROR" : (awardTime && awardTime <= now ? "Awards Ended" : "Award Date")}</div>
                 `;
+
+
+                const img = card.querySelector(".img-wrap img");
+                img.style.maxWidth = image_size + "%";
+                img.style.height = "auto";
+
+                const blocks = card.querySelectorAll(".block");
+                blocks.forEach(block => block.style.fontSize = font_size);
 
                 grid.appendChild(card);
 

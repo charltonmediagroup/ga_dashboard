@@ -95,8 +95,10 @@
     const displayTime = parseInt(params.get("duration")) || 30;
     const startIndex = (parseInt(params.get("start")) - 1) || 0;
 
+    const rss_ext = "/latest-videos.xml";
+
     /* ---------------- STATE ---------------- */
-    let latestVideosUrl = null;
+    let url = null;
     let videos = [];
     let currentIndex = startIndex;
     let showingA = true;
@@ -113,20 +115,18 @@
       })
       .then(config => {
         const site = config[code] || config["sbr"];
-        if (!site || !site.latestVideosUrl) {
-          throw new Error("latestVideosUrl not found in data.json");
+        if (!site || !site.url) {
+          throw new Error("url not found in data.json");
         }
 
-        latestVideosUrl = site.latestVideosUrl;
-        console.log("Using latestVideosUrl:", latestVideosUrl);
-
+        url = site.url;
         loadVideos();
       })
       .catch(err => console.error(err));
 
     /* ---------------- LOAD RSS (XML) ---------------- */
     function loadVideos() {
-      fetch(latestVideosUrl + "?_ts=" + Date.now())
+      fetch(url+rss_ext+ "?_ts=" + Date.now())
         .then(res => res.text())
         .then(xmlText => {
           const parser = new DOMParser();

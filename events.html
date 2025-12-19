@@ -20,11 +20,8 @@
       height: 100vh;
       display: flex;
       flex-direction: column;
-      /* enables Flexbox */
       justify-content: center;
-      /* horizontal centering */
       align-items: center;
-      /* vertical centering */
     }
 
     #ticker {
@@ -32,7 +29,6 @@
       align-items: center;
       overflow: hidden;
       white-space: nowrap;
-      /* padding: 1px 15px; */
       box-sizing: border-box;
       font-size: 26px;
       width: 100vw;
@@ -58,7 +54,6 @@
       background-color: red;
       height: 100%;
       align-content: center;
-
     }
 
     #headlines {
@@ -66,14 +61,12 @@
       white-space: nowrap;
       text-transform: uppercase;
       font-weight: bold;
-      /* animation applied dynamically via JS */
     }
 
     .headline {
       display: inline-block;
       margin: 0 60px;
     }
-
   </style>
 </head>
 
@@ -87,47 +80,28 @@
   </div>
 
   <script>
-    // read ?code= from URL (default to "sbr")
     const params = new URLSearchParams(window.location.search);
     const code = params.get("code") || "sbr";
     const isColorTheme = params.get("theme-color");
 
-    let rssUrl = null;          // will be set after loading data.json
+    let site = null;
     let refreshTimer = null;
-    const REFRESH_MS = 10 * 60 * 1000; // 10 minutes
+    const REFRESH_MS = 10 * 60 * 1000;
 
-    // Load config and start
     fetch("data.json")
-      .then(response => {
-        if (!response.ok) throw new Error("Failed to load data.json: " + response.status);
-        return response.json();
+      .then(res => {
+        if (!res.ok) throw new Error("Failed to load data.json");
+        return res.json();
       })
       .then(config => {
-        if (!config) throw new Error("data.json is empty or invalid JSON");
+        site = config[code] || config["sbr"];
+        if (!site?.url) throw new Error("No site URL found");
 
-        // pick rssUrl from config using code, fallback to sbr
-        rssUrl = (config[code] && config[code].rssUrl) ? config[code].rssUrl : (config["sbr"] && config["sbr"].rssUrl) ? config["sbr"].rssUrl : null;
-        rssUrl = rssUrl + (rssUrl.includes("?") ? "&" : "?") + "cache=" + Date.now();
-        
-        const site = (config[code]) ? config[code] : config["sbr"];
-
-        // Dynamic color
-        // document.body.style.backgroundColor = site.color;
-        if (String(isColorTheme).toLowerCase() === "true" || String(isColorTheme) === "1") {
-          console.log("Applying theme color:", site.color);
+        if (String(isColorTheme).toLowerCase() === "true" || isColorTheme === "1") {
           document.getElementById("scroll-container").style.backgroundColor = site.color;
         }
 
-
-        if (!rssUrl) {
-          throw new Error("No rssUrl found for code '" + code + "' and no fallback 'sbr' entry in data.json");
-        }
-
-        console.log("Using RSS:", rssUrl);
-
-        // initial load and schedule refresh
         loadHeadlines();
-        if (refreshTimer) clearInterval(refreshTimer);
         refreshTimer = setInterval(loadHeadlines, REFRESH_MS);
       })
       .catch(err => {
@@ -135,95 +109,80 @@
         document.getElementById("headlines").textContent = "Failed to load configuration.";
       });
 
-    // fetch RSS, parse, render, and setup scrolling animation
     async function loadHeadlines() {
-      if (!rssUrl) {
-        console.warn("rssUrl not set yet; skipping loadHeadlines()");
-        return;
-      }
+      if (!site) return;
+
+      const feedUrl =
+        site.url.replace(/\/$/, "") +
+        "/news-feed.xml?cache=" +
+        Date.now();
 
       try {
-        const response = await fetch(rssUrl);
-        if (!response.ok) throw new Error("Failed to fetch RSS: " + response.status);
+        const response = await fetch(feedUrl);
+        if (!response.ok) throw new Error("Failed to fetch RSS");
+
         const xmlText = await response.text();
         const parser = new DOMParser();
         const xml = parser.parseFromString(xmlText, "application/xml");
 
-        // basic error check for XML parse errors
-        const parsererror = xml.querySelector("parsererror");
-        if (parsererror) {
-          console.error("XML parse error:", parsererror.textContent);
+        if (xml.querySelector("parsererror")) {
           document.getElementById("headlines").textContent = "Invalid RSS feed.";
           return;
         }
 
         const items = xml.querySelectorAll("item");
-        if (!items.length) {
-          // some feeds use entry/title instead (atom). fallback attempt:
-          const entries = xml.querySelectorAll("entry");
-          if (entries.length) {
-            renderHeadlines(Array.from(entries).map(e => {
-              const t = e.querySelector("title");
-              return t ? t.textContent.trim() : "Untitled";
-            }));
-          } else {
-            document.getElementById("headlines").textContent = "No headlines found.";
-          }
-          return;
-        }
+        let titles = [];
 
-        // take up to 10 titles
-        const titles = Array.from(items).slice(0, 10).map(i => {
-          const t = i.querySelector("title");
-          return t ? t.textContent.trim() : "Untitled";
-        });
+        if (items.length) {
+          titles = Array.from(items).slice(0, 10).map(i =>
+            i.querySelector("title")?.textContent.trim() || "Untitled"
+          );
+        } else {
+          const entries = xml.querySelectorAll("entry");
+          titles = Array.from(entries).slice(0, 10).map(e =>
+            e.querySelector("title")?.textContent.trim() || "Untitled"
+          );
+        }
 
         renderHeadlines(titles);
       } catch (err) {
-        console.error("Error loading RSS feed:", err);
+        console.error(err);
         document.getElementById("headlines").textContent = "Failed to load headlines.";
       }
     }
 
-    // render headlines and create a pixel-accurate scroll animation
     function renderHeadlines(titlesArray) {
       const headlines = document.getElementById("headlines");
-      if (!titlesArray || !titlesArray.length) {
-        headlines.innerHTML = "No headlines.";
-        headlines.style.animation = ""; // clear animation
+
+      if (!titlesArray.length) {
+        headlines.textContent = "No headlines.";
+        headlines.style.animation = "";
         return;
       }
 
-      // build markup
-      headlines.innerHTML = titlesArray.map(t => `<span class="headline">${escapeHtml(t)}</span>`).join("");
+      headlines.innerHTML = titlesArray
+        .map(t => `<span class="headline">${escapeHtml(t)}</span>`)
+        .join("");
 
-      // Wait a frame so browser calculates sizes
       requestAnimationFrame(() => {
         const container = document.getElementById("scroll-container");
         const contentWidth = headlines.offsetWidth;
         const containerWidth = container.offsetWidth;
 
-        // If content fits in container, don't animate (just center left)
         if (contentWidth <= containerWidth) {
           headlines.style.animation = "";
           headlines.style.transform = "translateX(0)";
           return;
         }
 
-        // speed: pixels per second
-        const speed = params.get("speed") || 75; // px/s (adjust)
-        const duration = (contentWidth + containerWidth) / speed; // seconds
+        const speed = params.get("speed") || 75;
+        const duration = (contentWidth + containerWidth) / speed;
+        const animName = "scrollAnim_" + Date.now();
 
-        // create a unique keyframe name to avoid collisions
-        const animName = 'scrollAnim_' + Date.now();
+        document.getElementById("dynamic-scroll-style")?.remove();
 
-        // remove any previous dynamic style tag we created
-        const prevTag = document.getElementById('dynamic-scroll-style');
-        if (prevTag) prevTag.remove();
-
-        // create keyframes that move from +containerWidth px to -contentWidth px
-        const styleTag = document.createElement('style');
-        styleTag.id = 'dynamic-scroll-style';
+        const styleTag = document.createElement("style");
+        styleTag.id = "dynamic-scroll-style";
         styleTag.innerHTML = `
           @keyframes ${animName} {
             0% { transform: translateX(${containerWidth}px); }
@@ -232,21 +191,18 @@
         `;
         document.head.appendChild(styleTag);
 
-        // apply animation
         headlines.style.animation = `${animName} ${duration}s linear infinite`;
-        // ensure will-change for smoother animation
-        headlines.style.willChange = 'transform';
+        headlines.style.willChange = "transform";
       });
     }
 
-    // simple escape for HTML injection safety
     function escapeHtml(str) {
       return String(str)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;');
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
     }
   </script>
 

@@ -1,10 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <title>Top Read Titles</title>
     <style>
-        html, body {
+        html,
+        body {
             height: 100%;
             margin: 0;
         }
@@ -12,19 +14,39 @@
         body {
             display: flex;
             flex-direction: column;
+            font-family: Roboto, sans-serif;
+            padding: 0;
         }
 
         table {
-            flex: 1;
             width: 100%;
+            height: 100%; /* Make table occupy full height */
             border-collapse: collapse;
-            font-family: roboto, sans-serif;
             table-layout: fixed;
         }
 
-        th, td {
+        thead {
+            height: 40px; /* Optional fixed header height */
+        }
+
+        tbody {
+            display: block;
+            height: calc(100% - 40px); /* Subtract header height */
+            overflow-y: auto; /* Scroll if content exceeds */
+        }
+
+        tbody tr {
+            display: table;
+            table-layout: fixed;
+            width: 100%;
+            height: 1fr; /* Flex-like even distribution */
+        }
+
+        th,
+        td {
             padding: 8px 12px;
             border: 1px solid #ccc;
+            word-wrap: break-word;
         }
 
         th {
@@ -32,19 +54,23 @@
             text-align: left;
         }
 
-        th.views, td.views {
-            text-align: right;
-            color: #888;
-            width: 100px; /* fixed width */
+        tbody tr:nth-child(even) {
+            background-color: #fafafa;
+        }
+
+        .message {
+            text-align: center;
+            padding: 10px;
+            font-weight: bold;
         }
     </style>
 </head>
+
 <body>
     <table id="titles-table">
         <thead>
             <tr>
                 <th>Title</th>
-                <th class="views">Views</th>
             </tr>
         </thead>
         <tbody>
@@ -54,83 +80,71 @@
 
     <script>
         (async () => {
+            const tbody = document.querySelector("#titles-table tbody");
+
+            function showMessage(msg) {
+                tbody.innerHTML = `<tr><td class="message">${msg}</td></tr>`;
+            }
+
             try {
-                // Fetch data.json
                 const configRes = await fetch("data.json");
                 if (!configRes.ok) throw new Error("Failed to load data.json");
                 const config = await configRes.json();
 
-                // URL parameters
                 const params = new URLSearchParams(window.location.search);
                 const code = params.get("code") || "sbr";
-                const showViewsParam = params.get("show-views");
-                const showViews = showViewsParam === "1" || showViewsParam?.toLowerCase() === "true";
 
                 const site = config[code] || config["sbr"];
-                if (!site || !site.url) throw new Error("url not found in data.json");
+                if (!site || !site.url) throw new Error("URL not found in data.json");
 
-                // Dynamic timestamp parameter for cache-busting
                 const timestamp = Date.now();
                 const dynamicParamName = `ts${timestamp}`;
                 const url = `${site.url.replace(/\/$/, '')}/top-read-feed.xml?${dynamicParamName}=${timestamp}`;
-                console.log("Fetching URL:", url);
 
-                // Fetch XML feed
                 const xmlRes = await fetch(url);
                 if (!xmlRes.ok) throw new Error("Failed to fetch RSS XML");
                 const xmlText = await xmlRes.text();
 
-                // Parse XML
                 const parser = new DOMParser();
                 const xml = parser.parseFromString(xmlText, "application/xml");
                 const items = Array.from(xml.querySelectorAll("item"));
 
                 if (!items.length) {
-                    document.getElementById("titles-table").textContent = "No items found in the feed.";
+                    showMessage("No items found in the feed.");
                     return;
                 }
 
-                // Namespace-aware dc:creator parsing
                 const DC_NAMESPACE = "http://purl.org/dc/elements/1.1/";
                 const feeds = items.map(item => {
                     const dcElem = item.getElementsByTagNameNS(DC_NAMESPACE, "creator")[0]
-                                   || item.getElementsByTagName("dc:creator")[0];
+                        || item.getElementsByTagName("dc:creator")[0];
                     return {
                         title: item.querySelector("title")?.textContent.trim() || "Untitled",
                         views: parseInt(dcElem?.textContent.trim() || "0", 10)
                     };
                 });
 
-                // Sort by views descending
                 feeds.sort((a, b) => b.views - a.views);
 
-                // Render table rows
-                const tbody = document.querySelector("#titles-table tbody");
+                // Calculate height per row to fill tbody evenly
+                const rowHeight = Math.floor(tbody.clientHeight / feeds.length) + "px";
+
                 feeds.forEach(f => {
                     const tr = document.createElement("tr");
+                    tr.style.height = rowHeight; // Evenly distribute height
 
                     const tdTitle = document.createElement("td");
                     tdTitle.textContent = f.title;
                     tr.appendChild(tdTitle);
-
-                    const tdViews = document.createElement("td");
-                    tdViews.className = "views";
-                    tdViews.textContent = f.views;
-
-                    if (showViews) tr.appendChild(tdViews);
                     tbody.appendChild(tr);
                 });
 
-                // Hide Views header if showViews is false
-                if (!showViews) {
-                    document.querySelector("#titles-table th.views")?.remove();
-                }
-
             } catch (err) {
                 console.error(err);
-                document.getElementById("titles-table").textContent = "Failed to load feed.";
+                showMessage("Failed to load feed.");
             }
         })();
     </script>
 </body>
+
 </html>
