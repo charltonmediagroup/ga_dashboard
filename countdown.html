@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Countdown Timer</title>
+  <title>Countdown Timer Submission Start</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -18,16 +18,13 @@
     #countdown {
       color: black;
       text-align: center;
-      margin-top: 0; 
-    }
-
-    h1 {
-      text-align: center;
+      font-size: 3em;
     }
   </style>
 </head>
+
 <body>
-  <div id="countdown"></div>
+  <div id="countdown">Loading…</div>
 
   <script>
     // Get URL parameters
@@ -38,36 +35,42 @@
     const countdownElement = document.getElementById("countdown");
 
     // Apply font size if provided
-    if (fontSizeParam) {
-      countdownElement.style.fontSize = fontSizeParam;
-    } else {
-      countdownElement.style.fontSize = "3em"; // default size
-    }
+    countdownElement.style.fontSize = fontSizeParam || "3em";
 
     if (!datetimeParam) {
-      countdownElement.innerHTML = "No datetime provided in URL.";
+      countdownElement.textContent = "No datetime provided in URL.";
     } else {
-      const targetDate = new Date(datetimeParam).getTime();
+      const targetTime = new Date(datetimeParam).getTime();
 
-      const interval = setInterval(() => {
-        const now = new Date().getTime();
-        const distance = targetDate - now;
+      if (isNaN(targetTime)) {
+        countdownElement.textContent = "Invalid datetime.";
+      } else {
+        // Synchronous per-second countdown
+        function updateCountdown() {
+          const now = Date.now();
+          const diff = targetTime - now;
 
-        if (distance < 0) {
-          clearInterval(interval);
-          countdownElement.innerHTML = "DONE";
-          return;
+          if (diff <= 0) {
+            countdownElement.textContent = "Submission Started";
+            return;
+          }
+
+          const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+          const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+          const minutes = Math.floor((diff / (1000 * 60)) % 60);
+          const seconds = Math.floor((diff / 1000) % 60);
+
+          countdownElement.textContent = `${days}d ${hours}h ${minutes}m ${seconds}s`;
+
+          // Schedule next tick exactly at the next second
+          const nextTick = 1000 - (now % 1000);
+          setTimeout(updateCountdown, nextTick);
         }
 
-        const days = Math.floor(distance / (1000 * 60 * 60 * 24));
-        const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-        const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-        const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-
-        countdownElement.innerHTML =
-          days + "d " + hours + "h " + minutes + "m " + seconds + "s ";
-      }, 1000);
+        updateCountdown(); // start immediately
+      }
     }
   </script>
 </body>
+
 </html>

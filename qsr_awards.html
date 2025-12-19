@@ -51,7 +51,6 @@
             max-height: min(180px, 40vh);
             height: auto;
         }
-        
     </style>
 </head>
 
@@ -59,7 +58,7 @@
     <div class="grid" id="grid"></div>
     <script>
         const params = new URLSearchParams(window.location.search);
-        const CODE = params.get("code") || "sbr";
+        const CODE = params.get("code") || "qsr-aus";
         const image_size = params.get("image-size") ? Math.min(parseInt(params.get("image-size")), 100) : 100;
         const rawFont = params.get("font-size");
         let font_size;
@@ -101,26 +100,28 @@
             return { siteUrl: site.url, awards };
         }
 
-        async function fetchAwardImagesMap(siteUrl) {
+        async function fetchAwardImagesMap(url) {
             try {
-                const html = await fetch(`${siteUrl}/awards`).then(r => r.text());
+                const html = await fetch(url).then(r => r.text());
                 const doc = new DOMParser().parseFromString(html, "text/html");
-                const items = Array.from(doc.querySelectorAll('.view-content .item.with-border-bottom'));
-                const map = {};
-                items.forEach(item => {
-                    const linkEl = item.querySelector('.item__title a');
-                    const imgEl = item.querySelector('img.lazyload, img.lazyloaded');
-                    if (linkEl && imgEl) {
-                        const url = linkEl.href.trim();
-                        const title = linkEl.textContent.trim();
-                        const imgUrl = imgEl.getAttribute('data-srcset')?.split(' ')[0] || imgEl.src;
-                        map[url] = { imgUrl, title };
-                    }
-                });
-                return map;
+
+                // 1️⃣ Try header logo in block__image
+                let imgEl = doc.querySelector(".block__image img");
+                if (imgEl) return imgEl.dataset.src || imgEl.src;
+
+                // 2️⃣ Try favicon / apple-touch-icon
+                const iconEl = doc.querySelector('link[rel="icon"], link[rel="apple-touch-icon"]');
+                if (iconEl) return iconEl.href;
+
+                // 3️⃣ Try Open Graph image
+                const ogEl = doc.querySelector('meta[property="og:image"]');
+                if (ogEl) return ogEl.content;
+
+                // If nothing found
+                return null;
             } catch (e) {
-                console.warn("Failed to fetch award images map:", e);
-                return {};
+                console.warn("Failed to fetch logo:", e);
+                return null;
             }
         }
 
