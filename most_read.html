@@ -9,44 +9,31 @@
         body {
             height: 100%;
             margin: 0;
+            overflow: hidden;
         }
 
         body {
             display: flex;
             flex-direction: column;
-            font-family: Roboto, sans-serif;
-            padding: 0;
+            justify-content: flex-start;
+            align-items: center;
         }
 
         table {
-            width: 100%;
-            height: 100%; /* Make table occupy full height */
+            width: 800px;
+            max-width: 100%;
             border-collapse: collapse;
             table-layout: fixed;
-        }
-
-        thead {
-            height: 40px; /* Optional fixed header height */
-        }
-
-        tbody {
-            display: block;
-            height: calc(100% - 40px); /* Subtract header height */
-            overflow-y: auto; /* Scroll if content exceeds */
-        }
-
-        tbody tr {
-            display: table;
-            table-layout: fixed;
-            width: 100%;
-            height: 1fr; /* Flex-like even distribution */
+            /* Font size will be set dynamically via JS */
         }
 
         th,
         td {
             padding: 8px 12px;
             border: 1px solid #ccc;
-            word-wrap: break-word;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         th {
@@ -54,14 +41,11 @@
             text-align: left;
         }
 
-        tbody tr:nth-child(even) {
-            background-color: #fafafa;
-        }
-
-        .message {
-            text-align: center;
-            padding: 10px;
-            font-weight: bold;
+        th.views,
+        td.views {
+            text-align: right;
+            color: #888;
+            width: 100px;
         }
     </style>
 </head>
@@ -70,7 +54,8 @@
     <table id="titles-table">
         <thead>
             <tr>
-                <th>Title</th>
+                <th>Top 10 News Last 7 Days</th>
+                <th class="views">Views</th>
             </tr>
         </thead>
         <tbody>
@@ -80,19 +65,23 @@
 
     <script>
         (async () => {
-            const tbody = document.querySelector("#titles-table tbody");
-
-            function showMessage(msg) {
-                tbody.innerHTML = `<tr><td class="message">${msg}</td></tr>`;
-            }
-
             try {
+                // Get URL parameters
+                const params = new URLSearchParams(window.location.search);
+                const code = params.get("code") || "sbr";
+                const showViewsParam = params.get("show-views");
+                const showViews = showViewsParam === "1" || showViewsParam?.toLowerCase() === "true";
+                const fontSize = params.get("fontsize"); // Get fontsize parameter
+
+                // Apply font size if provided
+                if (fontSize) {
+                    document.querySelector("#titles-table").style.fontSize = fontSize + "px";
+                }
+
+                // Fetch config
                 const configRes = await fetch("data.json");
                 if (!configRes.ok) throw new Error("Failed to load data.json");
                 const config = await configRes.json();
-
-                const params = new URLSearchParams(window.location.search);
-                const code = params.get("code") || "sbr";
 
                 const site = config[code] || config["sbr"];
                 if (!site || !site.url) throw new Error("URL not found in data.json");
@@ -126,9 +115,7 @@
 
                 feeds.sort((a, b) => b.views - a.views);
 
-                // Calculate height per row to fill tbody evenly
-                const rowHeight = Math.floor(tbody.clientHeight / feeds.length) + "px";
-
+                const tbody = document.querySelector("#titles-table tbody");
                 feeds.forEach(f => {
                     const tr = document.createElement("tr");
                     tr.style.height = rowHeight; // Evenly distribute height
@@ -138,6 +125,10 @@
                     tr.appendChild(tdTitle);
                     tbody.appendChild(tr);
                 });
+
+                if (!showViews) {
+                    document.querySelector("#titles-table th.views")?.remove();
+                }
 
             } catch (err) {
                 console.error(err);
