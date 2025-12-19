@@ -9,15 +9,17 @@
         body {
             height: 100%;
             margin: 0;
+            overflow: hidden; /* Remove overall scrollbars */
         }
 
         body {
             display: flex;
             flex-direction: column;
+            justify-content: flex-start; /* Align table at top */
+            align-items: stretch; /* Stretch table to container width */
         }
 
         table {
-            flex: 0;
             width: 100%;
             border-collapse: collapse;
             font-family: roboto, sans-serif;
@@ -31,7 +33,6 @@
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-
         }
 
         th {
@@ -43,8 +44,12 @@
         td.views {
             text-align: right;
             color: #888;
-            width: 100px;
-            /* fixed width */
+            width: 100px; /* fixed width */
+        }
+
+        /* Optional: Make table content wrap if necessary */
+        td {
+            white-space: normal;
         }
     </style>
 </head>
@@ -65,12 +70,10 @@
     <script>
         (async () => {
             try {
-                // Fetch data.json
                 const configRes = await fetch("data.json");
                 if (!configRes.ok) throw new Error("Failed to load data.json");
                 const config = await configRes.json();
 
-                // URL parameters
                 const params = new URLSearchParams(window.location.search);
                 const code = params.get("code") || "sbr";
                 const showViewsParam = params.get("show-views");
@@ -79,18 +82,15 @@
                 const site = config[code] || config["sbr"];
                 if (!site || !site.url) throw new Error("url not found in data.json");
 
-                // Dynamic timestamp parameter for cache-busting
                 const timestamp = Date.now();
                 const dynamicParamName = `ts${timestamp}`;
                 const url = `${site.url.replace(/\/$/, '')}/top-read-feed.xml?${dynamicParamName}=${timestamp}`;
                 console.log("Fetching URL:", url);
 
-                // Fetch XML feed
                 const xmlRes = await fetch(url);
                 if (!xmlRes.ok) throw new Error("Failed to fetch RSS XML");
                 const xmlText = await xmlRes.text();
 
-                // Parse XML
                 const parser = new DOMParser();
                 const xml = parser.parseFromString(xmlText, "application/xml");
                 const items = Array.from(xml.querySelectorAll("item"));
@@ -100,7 +100,6 @@
                     return;
                 }
 
-                // Namespace-aware dc:creator parsing
                 const DC_NAMESPACE = "http://purl.org/dc/elements/1.1/";
                 const feeds = items.map(item => {
                     const dcElem = item.getElementsByTagNameNS(DC_NAMESPACE, "creator")[0]
@@ -111,10 +110,8 @@
                     };
                 });
 
-                // Sort by views descending
                 feeds.sort((a, b) => b.views - a.views);
 
-                // Render table rows
                 const tbody = document.querySelector("#titles-table tbody");
                 feeds.forEach(f => {
                     const tr = document.createElement("tr");
@@ -131,7 +128,6 @@
                     tbody.appendChild(tr);
                 });
 
-                // Hide Views header if showViews is false
                 if (!showViews) {
                     document.querySelector("#titles-table th.views")?.remove();
                 }
