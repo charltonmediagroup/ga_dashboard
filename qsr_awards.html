@@ -31,8 +31,17 @@
         }
 
         .block {
-            padding: 2px 0;
+            text-align: left;
             font-size: 15px;
+        }
+
+        .block .label {
+            font-weight: 600;
+        }
+
+        .block .value {
+            margin-top: 2px;
+            font-weight: normal;
         }
 
         .img-wrap {
@@ -68,21 +77,29 @@
 
         function startCountdown(dateString, el, doneText) {
             const target = new Date(dateString).getTime();
-            if (isNaN(target)) { el.textContent = doneText; return; }
+            if (isNaN(target)) {
+                el.querySelector(".value").textContent = doneText;
+                return;
+            }
 
             function tick() {
                 const diff = target - Date.now();
+                const valueEl = el.querySelector(".value");
+
                 if (diff <= 0) {
-                    el.textContent = doneText;
+                    valueEl.textContent = doneText;
                     return;
                 }
+
                 const d = Math.floor(diff / 86400000),
                     h = Math.floor(diff / 3600000) % 24,
                     m = Math.floor(diff / 60000) % 60,
                     s = Math.floor(diff / 1000) % 60;
-                el.textContent = `${el.dataset.label}: ${d}d ${h}h ${m}m ${s}s`;
+
+                valueEl.textContent = `${d}d ${h}h ${m}m ${s}s`;
                 setTimeout(tick, 1000 - (Date.now() % 1000));
             }
+
             tick();
         }
 
@@ -166,17 +183,25 @@
                 const endTime = award.endDate ? new Date(award.endDate).getTime() : null;
                 const awardTime = award.field_date ? new Date(award.field_date).getTime() : null;
 
-                const startBlock = document.createElement("div");
-                startBlock.className = "block start";
-                startBlock.dataset.label = "Nomination Opens";
+                function createBlock(labelText) {
+                    const block = document.createElement("div");
+                    block.className = "block";
 
-                const endBlock = document.createElement("div");
-                endBlock.className = "block end";
-                endBlock.dataset.label = "Nomination Closes";
+                    const label = document.createElement("div");
+                    label.className = "label";
+                    label.textContent = labelText;
 
-                const awardBlock = document.createElement("div");
-                awardBlock.className = "block main";
-                awardBlock.dataset.label = "Awards Presentation";
+                    const value = document.createElement("div");
+                    value.className = "value";
+
+                    block.appendChild(label);
+                    block.appendChild(value);
+                    return block;
+                }
+
+                const startBlock = createBlock("Nomination Opens");
+                const endBlock = createBlock("Nomination Closes");
+                const awardBlock = createBlock("Awards Presentation");
 
                 const imgWrap = document.createElement("div");
                 imgWrap.className = "img-wrap";
