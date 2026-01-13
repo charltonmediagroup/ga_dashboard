@@ -9,23 +9,21 @@
         body {
             height: 100%;
             margin: 0;
-            overflow: hidden;
         }
 
         body {
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-start;
-            align-items: center;
+            overflow-x: hidden;
+            overflow-y: auto;
         }
 
         table {
             width: 800px;
             max-width: 100%;
+            margin: 0 auto;
             border-collapse: collapse;
-            font-family: roboto, sans-serif;
-            table-layout: fixed;
-            /* Font size will be set dynamically via JS */
+            font-family: -apple-system, BlinkMacSystemFont, "Roboto", "Segoe UI", sans-serif;
+            table-layout: auto;
+            height: auto;
         }
 
         th,
@@ -35,6 +33,7 @@
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+            box-sizing: border-box;
         }
 
         th {
@@ -44,7 +43,10 @@
 
         th.views,
         td.views {
-            display: none;
+            width: 0;
+            padding: 0;
+            border: 0;
+            visibility: collapse;
         }
     </style>
 </head>
@@ -113,7 +115,7 @@
                     };
                 });
 
-               // feeds.sort((a, b) => b.views - a.views);
+                // feeds.sort((a, b) => b.views - a.views);
 
                 const tbody = document.querySelector("#titles-table tbody");
                 feeds.forEach(f => {
