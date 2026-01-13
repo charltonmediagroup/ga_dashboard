@@ -19,11 +19,9 @@
         table {
             width: 800px;
             max-width: 100%;
-            margin: 0 auto;
             border-collapse: collapse;
             font-family: -apple-system, BlinkMacSystemFont, "Roboto", "Segoe UI", sans-serif;
-            table-layout: auto;
-            height: auto;
+            table-layout: fixed;
         }
 
         th,
@@ -34,7 +32,10 @@
             overflow: hidden;
             text-overflow: ellipsis;
             box-sizing: border-box;
+            max-width: 0;
+            /* SAFARI FIX */
         }
+
 
         th {
             background-color: #f0f0f0;
