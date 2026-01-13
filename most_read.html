@@ -33,9 +33,15 @@
             text-overflow: ellipsis;
             box-sizing: border-box;
             max-width: 0;
-            /* SAFARI FIX */
         }
 
+        .cell-ellipsis {
+            display: block;
+            width: 100%;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+        }
 
         th {
             background-color: #f0f0f0;
@@ -123,7 +129,12 @@
                     const tr = document.createElement("tr");
 
                     const tdTitle = document.createElement("td");
-                    tdTitle.textContent = f.title;
+
+                    const wrapper = document.createElement("div");
+                    wrapper.className = "cell-ellipsis";
+                    wrapper.textContent = f.title;
+
+                    tdTitle.appendChild(wrapper);
                     tr.appendChild(tdTitle);
 
                     const tdViews = document.createElement("td");
