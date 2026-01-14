@@ -78,7 +78,7 @@
     <script>
         const rawFont = new URLSearchParams(window.location.search).get("font-size");
         let font_size = rawFont || "15px";
-
+        const halfParam = new URLSearchParams(window.location.search).get("half");
         function startCountdown(dateString, el, doneText) {
             const target = new Date(dateString).getTime();
             if (isNaN(target)) { el.textContent = doneText; return; }
@@ -145,8 +145,17 @@
             const grid = document.getElementById("grid");
             const rawAwards = await loadAllAwards();
 
-            const awards = await Promise.all(rawAwards.map(fetchNominationDates));
+            let awards = await Promise.all(rawAwards.map(fetchNominationDates));
             awards.sort((a, b) => new Date(a.field_date) - new Date(b.field_date));
+
+            // --- half logic ---
+            if (halfParam === "first" || halfParam === "second") {
+                const mid = Math.ceil(awards.length / 2);
+                awards = halfParam === "first"
+                    ? awards.slice(0, mid)
+                    : awards.slice(mid);
+            }
+
 
             const now = Date.now();
 
