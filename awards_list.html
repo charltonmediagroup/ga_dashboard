@@ -2,9 +2,10 @@
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Awards Countdown Grid</title>
+
     <style>
         html,
         body {
@@ -23,7 +24,6 @@
             width: 100%;
             display: grid;
             grid-template-columns: 3fr 1fr 1fr 1fr;
-            grid-auto-rows: 1fr;
             gap: 4px;
             padding: 4px;
             box-sizing: border-box;
@@ -35,10 +35,10 @@
             background: #eee;
             padding: 4px;
             border-radius: 2px;
-            overflow: hidden;
+            font-size: 14px;
             white-space: nowrap;
+            overflow: hidden;
             text-overflow: ellipsis;
-            font-size: 18px;
         }
 
         .block {
@@ -47,8 +47,8 @@
             justify-content: center;
             padding: 2px 4px;
             font-size: 12px;
-            overflow: hidden;
             white-space: nowrap;
+            overflow: hidden;
             text-overflow: ellipsis;
         }
 
@@ -57,20 +57,18 @@
             padding-left: 6px;
         }
 
-        /* Optional: alternate row coloring for readability */
-        .grid div:nth-child(4n+1):nth-child(even),
-        .grid div:nth-child(4n+2):nth-child(even),
-        .grid div:nth-child(4n+3):nth-child(even),
-        .grid div:nth-child(4n+4):nth-child(even) {
+        /* subtle row striping */
+        .grid div:nth-child(8n+5),
+        .grid div:nth-child(8n+6),
+        .grid div:nth-child(8n+7),
+        .grid div:nth-child(8n+8) {
             background: #fafafa;
         }
     </style>
-
 </head>
 
 <body>
     <div class="grid" id="grid">
-        <!-- Column headers -->
         <div class="header">Award Title</div>
         <div class="header">Submission Start</div>
         <div class="header">Submission End</div>
@@ -78,64 +76,65 @@
     </div>
 
     <script>
-        const rawFont = new URLSearchParams(window.location.search).get("font-size");
-        let font_size = rawFont || "15px";
-        const halfParam = new URLSearchParams(window.location.search).get("half");
-        function startCountdown(dateString, el, doneText) {
-            const target = new Date(dateString).getTime();
-            if (isNaN(target)) { el.textContent = doneText; return; }
+        /* -------------------- params -------------------- */
+        const params = new URLSearchParams(window.location.search);
+        const fontSize = params.get("font-size") || "12px";
+        const halfParam = params.get("half");
+
+        /* -------------------- utils -------------------- */
+        function decodeHtml(str = "") {
+            const t = document.createElement("textarea");
+            t.innerHTML = str;
+            return t.value;
+        }
+
+        function startCountdown(targetDate, el, doneText) {
+            const target = new Date(targetDate).getTime();
+            if (isNaN(target)) {
+                el.textContent = doneText;
+                return;
+            }
 
             function tick() {
                 const diff = target - Date.now();
-                if (diff <= 0) { el.textContent = doneText; return; }
-                const d = Math.floor(diff / 86400000),
-                    h = Math.floor(diff / 3600000) % 24,
-                    m = Math.floor(diff / 60000) % 60,
-                    s = Math.floor(diff / 1000) % 60;
+                if (diff <= 0) {
+                    el.textContent = doneText;
+                    return;
+                }
+
+                const d = Math.floor(diff / 86400000);
+                const h = Math.floor(diff / 3600000) % 24;
+                const m = Math.floor(diff / 60000) % 60;
+                const s = Math.floor(diff / 1000) % 60;
+
                 el.textContent = `${d}d ${h}h ${m}m ${s}s`;
                 setTimeout(tick, 1000 - (Date.now() % 1000));
             }
+
             tick();
         }
 
+        /* -------------------- data loading -------------------- */
         async function loadAllAwards() {
             const config = await fetch("dataAwards.json").then(r => r.json());
-            const allAwards = [];
 
-            for (const siteKey in config) {
-                const site = config[siteKey];
-                if (!site?.url) continue;
-                try {
-                    const awards = await fetch(site.url + "/node/content-menu/awards.json?cache=false")
-                        .then(r => r.json());
-                    allAwards.push(...awards);
-                } catch (err) {
-                    console.warn(`Failed to load awards for ${siteKey}:`, err);
-                }
-            }
+            const requests = Object.values(config)
+                .filter(site => site?.url)
+                .map(site =>
+                    fetch(site.url + "/node/content-menu/awards.json?cache=false")
+                        .then(r => r.json())
+                        .catch(() => [])
+                );
 
-            return allAwards;
-        }
-
-        async function fetchNominationDates(award) {
-            try {
-                const [startDate, endDate] = await Promise.all([
-                    fetchNodeDate(award.view_node, "div.nomination-date div.date.start-date"),
-                    fetchNodeDate(award.view_node, "div.nomination-date div.date.end-date")
-                ]);
-                return { ...award, startDate, endDate };
-            } catch {
-                return { ...award, startDate: null, endDate: null };
-            }
+            const results = await Promise.all(requests);
+            return results.flat();
         }
 
         async function fetchNodeDate(url, selector) {
             try {
                 const html = await fetch(url).then(r => r.text());
                 const doc = new DOMParser().parseFromString(html, "text/html");
-                const nominationEl = doc.querySelector("div.nomination-date");
-                if (!nominationEl) return null;
-                const el = nominationEl.querySelector(selector.replace("div.nomination-date", ""));
+                const el = doc.querySelector(selector);
                 const raw = el?.getAttribute("date");
                 return raw ? new Date(raw).toISOString() : null;
             } catch {
@@ -143,14 +142,23 @@
             }
         }
 
+        async function enrichAward(award) {
+            const [startDate, endDate] = await Promise.all([
+                fetchNodeDate(award.view_node, "div.date.start-date"),
+                fetchNodeDate(award.view_node, "div.date.end-date")
+            ]);
+
+            return { ...award, startDate, endDate };
+        }
+
+        /* -------------------- render -------------------- */
         async function renderGrid() {
             const grid = document.getElementById("grid");
-            const rawAwards = await loadAllAwards();
+            let awards = await loadAllAwards();
 
-            let awards = await Promise.all(rawAwards.map(fetchNominationDates));
+            awards = await Promise.all(awards.map(enrichAward));
             awards.sort((a, b) => new Date(a.field_date) - new Date(b.field_date));
 
-            // --- half logic ---
             if (halfParam === "first" || halfParam === "second") {
                 const mid = Math.ceil(awards.length / 2);
                 awards = halfParam === "first"
@@ -158,46 +166,38 @@
                     : awards.slice(mid);
             }
 
-
             const now = Date.now();
 
             awards.forEach(award => {
-                const startTime = award.startDate ? new Date(award.startDate).getTime() : null;
-                const endTime = award.endDate ? new Date(award.endDate).getTime() : null;
-                const awardTime = award.field_date ? new Date(award.field_date).getTime() : null;
-
-                const startError = startTime && endTime && startTime > endTime;
-                const endError = endTime && startTime && endTime < startTime;
-                const awardError = awardTime && ((startTime && awardTime < startTime) || (endTime && awardTime < endTime));
+                const startTime = award.startDate && new Date(award.startDate).getTime();
+                const endTime = award.endDate && new Date(award.endDate).getTime();
+                const awardTime = award.field_date && new Date(award.field_date).getTime();
 
                 const titleDiv = document.createElement("div");
                 titleDiv.className = "block title";
-                titleDiv.textContent = award.title;
-                titleDiv.style.fontSize = font_size;
+                titleDiv.style.fontSize = fontSize;
+                titleDiv.textContent = decodeHtml(award.title);
 
                 const startDiv = document.createElement("div");
-                startDiv.className = "block start";
-                startDiv.textContent = startError ? "ERROR" : (startTime && startTime <= now ? "Submission Started" : "Submission Start");
-                startDiv.style.fontSize = font_size;
+                startDiv.className = "block";
+                startDiv.style.fontSize = fontSize;
+                startDiv.textContent = "Submission Start";
 
                 const endDiv = document.createElement("div");
-                endDiv.className = "block end";
-                endDiv.textContent = endError ? "ERROR" : (endTime && endTime <= now ? "Submission Ended" : "Submission End");
-                endDiv.style.fontSize = font_size;
+                endDiv.className = "block";
+                endDiv.style.fontSize = fontSize;
+                endDiv.textContent = "Submission End";
 
                 const awardDiv = document.createElement("div");
-                awardDiv.className = "block main";
-                awardDiv.textContent = awardError ? "ERROR" : (awardTime && awardTime <= now ? "Awards Ended" : "Award Date");
-                awardDiv.style.fontSize = font_size;
+                awardDiv.className = "block";
+                awardDiv.style.fontSize = fontSize;
+                awardDiv.textContent = "Award Date";
 
-                grid.appendChild(titleDiv);
-                grid.appendChild(startDiv);
-                grid.appendChild(endDiv);
-                grid.appendChild(awardDiv);
+                grid.append(titleDiv, startDiv, endDiv, awardDiv);
 
-                if (!startError && startTime) startCountdown(startTime, startDiv, "Submission Started");
-                if (!endError && endTime) startCountdown(endTime, endDiv, "Submission Ended");
-                if (!awardError && awardTime) startCountdown(awardTime, awardDiv, "Awards Ended");
+                if (startTime) startCountdown(startTime, startDiv, "Submission Started");
+                if (endTime) startCountdown(endTime, endDiv, "Submission Ended");
+                if (awardTime) startCountdown(awardTime, awardDiv, "Awards Ended");
             });
         }
 
