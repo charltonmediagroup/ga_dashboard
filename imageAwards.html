@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>All Award Images</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 8px;
+        background: #f8f8f8;
+    }
+
+    .list {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .row {
+        display: flex;
+        align-items: center;
+        background: #fff;
+        border-radius: 4px;
+        padding: 4px 8px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        gap: 8px;
+    }
+
+    .row img {
+        width: 40px;
+        height: 40px;
+        object-fit: contain;
+        flex-shrink: 0;
+        border-radius: 2px;
+    }
+
+    .row span {
+        font-size: 14px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+</style>
+</head>
+<body>
+
+<h2>All Award Images</h2>
+<div class="list" id="list"></div>
+
+<script>
+async function fetchAwardImagesMap(siteUrl) {
+    try {
+        const html = await fetch(`${siteUrl}/awards`).then(r => r.text());
+        const doc = new DOMParser().parseFromString(html, "text/html");
+        const items = Array.from(doc.querySelectorAll('.view-content .item.with-border-bottom'));
+        const map = {};
+        items.forEach(item => {
+            const linkEl = item.querySelector('.item__title a');
+            const imgEl = item.querySelector('img.lazyload, img.lazyloaded');
+            if (linkEl && imgEl) {
+                const url = linkEl.href.trim();
+                const title = linkEl.textContent.trim();
+                const imgUrl = imgEl.getAttribute('data-srcset')?.split(' ')[0] || imgEl.src;
+                map[url] = { imgUrl, title };
+            }
+        });
+        return map;
+    } catch (e) {
+        console.warn("Failed to fetch award images map:", e);
+        return {};
+    }
+}
+
+async function displayAllImages() {
+    const config = await fetch('dataAwards.json').then(r => r.json());
+    const list = document.getElementById('list');
+
+    const siteTasks = Object.values(config)
+        .filter(site => site?.url)
+        .map(async site => {
+            const imagesMap = await fetchAwardImagesMap(site.url);
+            return Object.values(imagesMap);
+        });
+
+    const results = await Promise.all(siteTasks);
+    const allAwards = results.flat();
+
+    allAwards.forEach(({ imgUrl, title }) => {
+        const row = document.createElement('div');
+        row.className = 'row';
+
+        const img = document.createElement('img');
+        img.src = imgUrl;
+        img.alt = title;
+
+        const span = document.createElement('span');
+        span.textContent = title;
+
+        row.appendChild(img);
+        row.appendChild(span);
+
+        list.appendChild(row);
+    });
+}
+
+displayAllImages();
+</script>
+
+</body>
+</html>

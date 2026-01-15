@@ -32,7 +32,7 @@
         .header {
             font-weight: bold;
             text-align: center;
-            background: white;
+            background: #eee;
             padding: 4px;
             border-radius: 2px;
             font-size: 14px;
@@ -54,13 +54,7 @@
 
         .title {
             justify-content: flex-start;
-            gap: 6px;
-        }
-
-        .title img {
-            object-fit: contain;
-            flex-shrink: 0;
-            border-radius: 2px;
+            padding-left: 6px;
         }
 
         /* subtle row striping */
@@ -82,30 +76,37 @@
     </div>
 
     <script>
+        /* -------------------- params -------------------- */
         const params = new URLSearchParams(window.location.search);
         const fontSize = params.get("font-size") || "12px";
-        const imgSize = params.get("img-size") || 32;
         const halfParam = params.get("half");
 
-        // Decode HTML entities
+        /* -------------------- utils -------------------- */
         function decodeHtml(str = "") {
             const t = document.createElement("textarea");
             t.innerHTML = str;
             return t.value;
         }
 
-        // Countdown timer
         function startCountdown(targetDate, el, doneText) {
             const target = new Date(targetDate).getTime();
-            if (isNaN(target)) { el.textContent = doneText; return; }
+            if (isNaN(target)) {
+                el.textContent = doneText;
+                return;
+            }
 
             function tick() {
                 const diff = target - Date.now();
-                if (diff <= 0) { el.textContent = doneText; return; }
+                if (diff <= 0) {
+                    el.textContent = doneText;
+                    return;
+                }
+
                 const d = Math.floor(diff / 86400000);
                 const h = Math.floor(diff / 3600000) % 24;
                 const m = Math.floor(diff / 60000) % 60;
                 const s = Math.floor(diff / 1000) % 60;
+
                 el.textContent = `${d}d ${h}h ${m}m ${s}s`;
                 setTimeout(tick, 1000 - (Date.now() % 1000));
             }
@@ -113,20 +114,22 @@
             tick();
         }
 
-        // Load all awards from config
+        /* -------------------- data loading -------------------- */
         async function loadAllAwards() {
             const config = await fetch("dataAwards.json").then(r => r.json());
+
             const requests = Object.values(config)
                 .filter(site => site?.url)
-                .map(site => fetch(site.url + "/node/content-menu/awards.json?cache=false")
-                    .then(r => r.json())
-                    .catch(() => [])
+                .map(site =>
+                    fetch(site.url + "/node/content-menu/awards.json?cache=false")
+                        .then(r => r.json())
+                        .catch(() => [])
                 );
+
             const results = await Promise.all(requests);
             return results.flat();
         }
 
-        // Fetch start/end dates from the award page
         async function fetchNodeDate(url, selector) {
             try {
                 const html = await fetch(url).then(r => r.text());
@@ -139,106 +142,42 @@
             }
         }
 
-        // Add start/end dates to award object
         async function enrichAward(award) {
             const [startDate, endDate] = await Promise.all([
                 fetchNodeDate(award.view_node, "div.date.start-date"),
                 fetchNodeDate(award.view_node, "div.date.end-date")
             ]);
+
             return { ...award, startDate, endDate };
         }
 
-        // Fetch images from the award listing page
-        async function fetchAwardImagesMap(siteUrl) {
-            try {
-                const html = await fetch(`${siteUrl}/awards`).then(r => r.text());
-                const doc = new DOMParser().parseFromString(html, "text/html");
-                const items = Array.from(doc.querySelectorAll('.view-content .item.with-border-bottom'));
-                const map = {};
-                items.forEach(item => {
-                    const linkEl = item.querySelector('.item__title a');
-                    const imgEl = item.querySelector('img.lazyload, img.lazyloaded');
-                    if (linkEl && imgEl) {
-                        const url = linkEl.href.trim(); // Use URL as key
-                        const imgUrl = imgEl.getAttribute('data-srcset')?.split(' ')[0] || imgEl.src;
-                        map[url] = imgUrl;
-                    }
-                });
-                return map;
-            } catch (e) {
-                console.warn("Failed to fetch award images map:", e);
-                return {};
-            }
-        }
-
-        // Render the grid
+        /* -------------------- render -------------------- */
         async function renderGrid() {
             const grid = document.getElementById("grid");
             let awards = await loadAllAwards();
+
             awards = await Promise.all(awards.map(enrichAward));
             awards.sort((a, b) => new Date(a.field_date) - new Date(b.field_date));
 
-            // Half parameter support
-            if (["first", "second", "third", "fourth"].includes(halfParam)) {
-                const quarter = Math.ceil(awards.length / 4);
-                switch (halfParam) {
-                    case "first":
-                        awards = awards.slice(0, quarter);
-                        break;
-                    case "second":
-                        awards = awards.slice(quarter, quarter * 2);
-                        break;
-                    case "third":
-                        awards = awards.slice(quarter * 2, quarter * 3);
-                        break;
-                    case "fourth":
-                        awards = awards.slice(quarter * 3);
-                        break;
-                }
+            if (halfParam === "first" || halfParam === "second") {
+                const mid = Math.ceil(awards.length / 2);
+                awards = halfParam === "first"
+                    ? awards.slice(0, mid)
+                    : awards.slice(mid);
             }
 
-            // Fetch images for all sites
-            const config = await fetch("dataAwards.json").then(r => r.json());
-            const imageMaps = await Promise.all(Object.values(config)
-                .filter(site => site?.url)
-                .map(site => fetchAwardImagesMap(site.url))
-            );
-            const allImagesMap = Object.assign({}, ...imageMaps);
+            const now = Date.now();
 
-            // Render each award
             awards.forEach(award => {
                 const startTime = award.startDate && new Date(award.startDate).getTime();
                 const endTime = award.endDate && new Date(award.endDate).getTime();
                 const awardTime = award.field_date && new Date(award.field_date).getTime();
 
-                const customTDMImage = "https://www.cmgassets.com/s3fs-public/styles/awards/public/2025-04/tdm-indonesia.png.webp?itok=Bia_KDVA"; // <-- replace with your image URL
-
-                // Title with image (matched by view_node URL)
                 const titleDiv = document.createElement("div");
                 titleDiv.className = "block title";
                 titleDiv.style.fontSize = fontSize;
+                titleDiv.textContent = decodeHtml(award.title);
 
-                const img = document.createElement("img");
-
-                img.style.width = img.style.height = imgSize + "px";
-
-                // Use custom image if title starts with "TDM"
-                if (award.title.trim().startsWith("TDM")) {
-                    img.src = customTDMImage;
-                } else {
-                    img.src = allImagesMap[award.view_node] || "";
-                }
-
-                img.alt = award.title;
-
-                const span = document.createElement("span");
-                span.textContent = decodeHtml(award.title);
-
-                titleDiv.appendChild(img);
-                titleDiv.appendChild(span);
-                ;
-
-                // Other columns
                 const startDiv = document.createElement("div");
                 startDiv.className = "block";
                 startDiv.style.fontSize = fontSize;
@@ -267,4 +206,3 @@
 </body>
 
 </html>
-
