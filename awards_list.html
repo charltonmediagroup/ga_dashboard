@@ -179,22 +179,8 @@
             awards.sort((a, b) => new Date(a.field_date) - new Date(b.field_date));
 
             // Half parameter support
-            if (["first", "second", "third", "fourth"].includes(halfParam)) {
-                const quarter = Math.ceil(awards.length / 4);
-                switch (halfParam) {
-                    case "first":
-                        awards = awards.slice(0, quarter);
-                        break;
-                    case "second":
-                        awards = awards.slice(quarter, quarter * 2);
-                        break;
-                    case "third":
-                        awards = awards.slice(quarter * 2, quarter * 3);
-                        break;
-                    case "fourth":
-                        awards = awards.slice(quarter * 3);
-                        break;
-                }
+            if (halfParam === "first" || halfParam === "second" || halfParam === "third" || halfParam === "fourth") {
+                const mid = Math.ceil(awards.length / 2); awards = halfParam === "first" ? awards.slice(0, mid) : awards.slice(mid);
             }
 
             // Fetch images for all sites
@@ -267,4 +253,3 @@
 </body>
 
 </html>
-
