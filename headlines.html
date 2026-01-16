@@ -9,7 +9,7 @@
     body {
       height: 100%;
       margin: 0;
-      padding: 20px;
+      padding: 0;
       font-family: Arial, sans-serif;
       background: #f1f1f1;
     }
@@ -18,10 +18,10 @@
       width: 100%;
       height: 100%;
       border-collapse: collapse;
+      table-layout: fixed;
       background: #fff;
       border-radius: 6px;
       box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-      table-layout: fixed;
     }
 
     th,
@@ -35,11 +35,13 @@
       font-size: 24px;
       font-weight: bold;
       text-align: center;
-      color: #fff; /* text color on header */
+      color: #fff;
     }
 
     .headline {
       font-weight: bold;
+      display: flex;
+      align-items: center;
     }
 
     .tag {
@@ -47,6 +49,11 @@
       font-weight: normal;
       color: #555;
       margin-left: 8px;
+    }
+
+    tbody tr {
+      /* Each row will take up 1/10 of the remaining height */
+      height: 10%;
     }
   </style>
 </head>
@@ -60,22 +67,17 @@
       </tr>
     </thead>
     <tbody id="headlines-body">
-      <tr><td>Loading headlines...</td></tr>
+      <!-- Headlines will appear here -->
     </tbody>
   </table>
 
   <script>
     const params = new URLSearchParams(window.location.search);
     const code = params.get("code") || "sbr";
-    const isColorTheme = params.get("theme-color");
-    const duration = parseInt(params.get("duration")) || 4000;
-    const fontSizeParam = parseInt(params.get("fontSize")) || 20;
+    const fontSizeParam = parseInt(params.get("fontSize")) || 18;
 
     let config = null;
     let allHeadlines = [];
-    let rotateIndex = 0;
-    let refreshTimer = null;
-    const REFRESH_MS = 10 * 60 * 1000;
 
     function parsePubDate(pubDateText) {
       const match = pubDateText.match(/(\d{2})\/(\d{2})\/(\d{4})/);
@@ -87,21 +89,16 @@
     fetch("data.json")
       .then(res => res.json())
       .then(c => {
-        if (!c) throw new Error("data.json empty");
         config = c;
-
         const site = config[code] || config["sbr"];
-        const siteName = site.name || "Site";
-        document.getElementById("site-name").textContent = siteName;
+        document.getElementById("site-name").textContent = site.name || "Site";
 
-        // set header background color from data.json
+        // Set header background color from data.json
         if (site.color) {
           document.getElementById("site-name").style.backgroundColor = site.color;
         }
 
-        loadHeadlines();
-        if (refreshTimer) clearInterval(refreshTimer);
-        refreshTimer = setInterval(loadHeadlines, REFRESH_MS);
+        loadHeadlines(site);
       })
       .catch(err => {
         console.error(err);
@@ -109,10 +106,7 @@
         document.getElementById("headlines-body").innerHTML = "<tr><td>Failed to load headlines.</td></tr>";
       });
 
-    async function loadHeadlines() {
-      if (!config) return;
-
-      const site = config[code] || config["sbr"];
+    async function loadHeadlines(site) {
       const urls = [
         { url: site.exclusivesUrl, tag: "Exclusive" },
         { url: site.inFocusUrl, tag: "In Focus" }
@@ -144,18 +138,18 @@
         });
       }
 
+      // Sort by date descending
       allHeadlines = Array.from(tempMap.values()).sort((a, b) => b.date - a.date);
-      rotateIndex = 0;
-      showNextBatch();
-      if (refreshTimer) clearInterval(refreshTimer);
-      refreshTimer = setInterval(showNextBatch, duration);
+
+      // Render headlines
+      renderHeadlines();
     }
 
-    function showNextBatch() {
+    function renderHeadlines() {
       const tbody = document.getElementById("headlines-body");
       tbody.innerHTML = "";
-      const batch = allHeadlines.slice(rotateIndex, rotateIndex + 10);
       const numberToDisplay = 10;
+      const batch = allHeadlines.slice(0, numberToDisplay);
 
       for (let i = 0; i < numberToDisplay; i++) {
         const tr = document.createElement("tr");
@@ -178,9 +172,6 @@
         tr.appendChild(td);
         tbody.appendChild(tr);
       }
-
-      rotateIndex += 10;
-      if (rotateIndex >= allHeadlines.length) rotateIndex = 0;
     }
   </script>
 
