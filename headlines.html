@@ -106,10 +106,17 @@
             });
 
         async function loadHeadlines(site) {
+            const timestamp = Date.now(); // current time in ms
             const urls = [
                 { url: site.exclusivesUrl, tag: "Exclusive" },
                 { url: site.inFocusUrl, tag: "In Focus" }
-            ].filter(u => u.url);
+            ]
+                .filter(u => u.url)
+                .map(u => {
+                    // Add cache param
+                    const separator = u.url.includes("?") ? "&" : "?";
+                    return { url: `${u.url}${separator}cache=${timestamp}`, tag: u.tag };
+                });
 
             const tempMap = new Map();
             const sevenDaysAgo = new Date();
@@ -137,7 +144,7 @@
                 });
             }
 
-            // sort by date descending
+            // Sort by date descending
             allHeadlines = Array.from(tempMap.values()).sort((a, b) => b.date - a.date);
             rotateIndex = 0;
 
@@ -145,6 +152,7 @@
             if (refreshTimer) clearInterval(refreshTimer);
             refreshTimer = setInterval(showNextBatch, duration);
         }
+
 
         function showNextBatch() {
             const tbody = document.getElementById("headlines-body");
