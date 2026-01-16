@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>RSS Headlines Table</title>
+  <style>
+    html,
+    body {
+      height: 100%;
+      margin: 0;
+      padding: 20px;
+      font-family: Arial, sans-serif;
+      background: #f1f1f1;
+    }
+
+    table {
+      width: 100%;
+      height: 100%;
+      border-collapse: collapse;
+      background: #fff;
+      border-radius: 6px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+      table-layout: fixed;
+    }
+
+    th,
+    td {
+      text-align: left;
+      padding: 8px 12px;
+      word-break: break-word;
+    }
+
+    th {
+      font-size: 24px;
+      font-weight: bold;
+      text-align: center;
+      color: #fff; /* text color on header */
+    }
+
+    .headline {
+      font-weight: bold;
+    }
+
+    .tag {
+      font-size: 14px;
+      font-weight: normal;
+      color: #555;
+      margin-left: 8px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <table id="headlines-table">
+    <thead>
+      <tr>
+        <th id="site-name">Loading...</th>
+      </tr>
+    </thead>
+    <tbody id="headlines-body">
+      <tr><td>Loading headlines...</td></tr>
+    </tbody>
+  </table>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get("code") || "sbr";
+    const isColorTheme = params.get("theme-color");
+    const duration = parseInt(params.get("duration")) || 4000;
+    const fontSizeParam = parseInt(params.get("fontSize")) || 20;
+
+    let config = null;
+    let allHeadlines = [];
+    let rotateIndex = 0;
+    let refreshTimer = null;
+    const REFRESH_MS = 10 * 60 * 1000;
+
+    function parsePubDate(pubDateText) {
+      const match = pubDateText.match(/(\d{2})\/(\d{2})\/(\d{4})/);
+      if (!match) return null;
+      const [, month, day, year] = match.map(Number);
+      return new Date(year, month - 1, day);
+    }
+
+    fetch("data.json")
+      .then(res => res.json())
+      .then(c => {
+        if (!c) throw new Error("data.json empty");
+        config = c;
+
+        const site = config[code] || config["sbr"];
+        const siteName = site.name || "Site";
+        document.getElementById("site-name").textContent = siteName;
+
+        // set header background color from data.json
+        if (site.color) {
+          document.getElementById("site-name").style.backgroundColor = site.color;
+        }
+
+        loadHeadlines();
+        if (refreshTimer) clearInterval(refreshTimer);
+        refreshTimer = setInterval(loadHeadlines, REFRESH_MS);
+      })
+      .catch(err => {
+        console.error(err);
+        document.getElementById("site-name").textContent = "Failed to load site";
+        document.getElementById("headlines-body").innerHTML = "<tr><td>Failed to load headlines.</td></tr>";
+      });
+
+    async function loadHeadlines() {
+      if (!config) return;
+
+      const site = config[code] || config["sbr"];
+      const urls = [
+        { url: site.exclusivesUrl, tag: "Exclusive" },
+        { url: site.inFocusUrl, tag: "In Focus" }
+      ].filter(u => u.url);
+
+      const tempMap = new Map();
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+      const xmlStrings = await Promise.all(urls.map(u => fetch(u.url).then(r => r.text())));
+
+      for (let i = 0; i < xmlStrings.length; i++) {
+        const xmlText = xmlStrings[i];
+        const feedTag = urls[i].tag;
+        const xml = new DOMParser().parseFromString(xmlText, "application/xml");
+
+        xml.querySelectorAll("item").forEach(item => {
+          const title = item.querySelector("title")?.textContent?.trim();
+          const pubDateText = item.querySelector("pubDate")?.textContent;
+          const pubDate = pubDateText ? parsePubDate(pubDateText) : null;
+
+          if (!title || !pubDate || pubDate < sevenDaysAgo) return;
+
+          if (tempMap.has(title)) {
+            tempMap.get(title).tags.add(feedTag);
+          } else {
+            tempMap.set(title, { title, date: pubDate, tags: new Set([feedTag]) });
+          }
+        });
+      }
+
+      allHeadlines = Array.from(tempMap.values()).sort((a, b) => b.date - a.date);
+      rotateIndex = 0;
+      showNextBatch();
+      if (refreshTimer) clearInterval(refreshTimer);
+      refreshTimer = setInterval(showNextBatch, duration);
+    }
+
+    function showNextBatch() {
+      const tbody = document.getElementById("headlines-body");
+      tbody.innerHTML = "";
+      const batch = allHeadlines.slice(rotateIndex, rotateIndex + 10);
+      const numberToDisplay = 10;
+
+      for (let i = 0; i < numberToDisplay; i++) {
+        const tr = document.createElement("tr");
+        const td = document.createElement("td");
+        td.className = "headline";
+        td.style.fontSize = fontSizeParam + "px";
+
+        if (i < batch.length) {
+          td.textContent = batch[i].title;
+          if (batch[i].tags.size > 0) {
+            const tagSpan = document.createElement("span");
+            tagSpan.className = "tag";
+            tagSpan.textContent = " (" + Array.from(batch[i].tags).join(" & ") + ")";
+            td.appendChild(tagSpan);
+          }
+        } else {
+          td.innerHTML = "&nbsp;"; // placeholder for empty rows
+        }
+
+        tr.appendChild(td);
+        tbody.appendChild(tr);
+      }
+
+      rotateIndex += 10;
+      if (rotateIndex >= allHeadlines.length) rotateIndex = 0;
+    }
+  </script>
+
+</body>
+
+</html>
