@@ -23,7 +23,7 @@
             height: 100%;
             width: 100%;
             display: grid;
-            grid-template-columns: 3fr 1fr 1fr 1fr;
+            grid-template-columns: 3fr 1fr 1fr 1fr 1fr;
             gap: 4px;
             padding: 4px;
             box-sizing: border-box;
@@ -79,6 +79,7 @@
         <div class="header">Submission Start</div>
         <div class="header">Submission End</div>
         <div class="header">Award Date</div>
+        <div class="header">Date</div>
     </div>
 
     <script>
@@ -112,6 +113,15 @@
 
             tick();
         }
+
+        function formatDateOnly(dateStr) {
+            if (!dateStr) return "";
+            const d = new Date(dateStr);
+            if (isNaN(d)) return "";
+            // Example: "Jan 16, 2026" — change options if you prefer another format
+            return d.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
+        }
+
 
         // Load all awards from config
         async function loadAllAwards() {
@@ -196,6 +206,7 @@
                 const startTime = award.startDate && new Date(award.startDate).getTime();
                 const endTime = award.endDate && new Date(award.endDate).getTime();
                 const awardTime = award.field_date && new Date(award.field_date).getTime();
+                    if (awardTime && awardTime < Date.now()) return;
 
                 const customTDMImage = "https://www.cmgassets.com/s3fs-public/styles/awards/public/2025-04/tdm-indonesia.png.webp?itok=Bia_KDVA"; // <-- replace with your image URL
 
@@ -240,7 +251,12 @@
                 awardDiv.style.fontSize = fontSize;
                 awardDiv.textContent = "Award Date";
 
-                grid.append(titleDiv, startDiv, endDiv, awardDiv);
+                const awardDateDiv = document.createElement("div");
+                awardDateDiv.className = "block";
+                awardDateDiv.style.fontSize = fontSize;
+                awardDateDiv.textContent = award.field_date ? formatDateOnly(award.field_date) : "";
+
+                grid.append(titleDiv, startDiv, endDiv, awardDiv, awardDateDiv);
 
                 if (startTime) startCountdown(startTime, startDiv, "Submission Started");
                 if (endTime) startCountdown(endTime, endDiv, "Submission Ended");
