@@ -149,13 +149,35 @@
             }
         }
 
+        async function fetchNominationDates(award) {
+            try {
+                const [startDate, endDate] = await Promise.all([
+                    fetchNodeDate(award.view_node, "div.nomination-date div.date.start-date"),
+                    fetchNodeDate(award.view_node, "div.nomination-date div.date.end-date")
+                ]);
+                return { ...award, startDate, endDate };
+            } catch {
+                return { ...award, startDate: null, endDate: null };
+            }
+        }
+
+        async function fetchNodeDate(url, selector) {
+            try {
+                const html = await fetch(url).then(r => r.text());
+                const doc = new DOMParser().parseFromString(html, "text/html");
+                const nominationEl = doc.querySelector("div.nomination-date");
+                if (!nominationEl) return null;
+                const el = nominationEl.querySelector(selector.replace("div.nomination-date", ""));
+                const raw = el?.getAttribute("date");
+                return raw ? new Date(raw).toISOString() : null;
+            } catch {
+                return null;
+            }
+        }
+
         // Add start/end dates to award object
         async function enrichAward(award) {
-            const [startDate, endDate] = await Promise.all([
-                fetchNodeDate(award.view_node, "div.date.start-date"),
-                fetchNodeDate(award.view_node, "div.date.end-date")
-            ]);
-            return { ...award, startDate, endDate };
+            return fetchNominationDates(award);
         }
 
         // Fetch images from the award listing page
@@ -206,7 +228,7 @@
                 const startTime = award.startDate && new Date(award.startDate).getTime();
                 const endTime = award.endDate && new Date(award.endDate).getTime();
                 const awardTime = award.field_date && new Date(award.field_date).getTime();
-                    if (awardTime && awardTime < Date.now()) return;
+                if (awardTime && awardTime < Date.now()) return;
 
                 const customTDMImage = "https://www.cmgassets.com/s3fs-public/styles/awards/public/2025-04/tdm-indonesia.png.webp?itok=Bia_KDVA"; // <-- replace with your image URL
 
