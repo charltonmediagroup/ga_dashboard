@@ -75,9 +75,13 @@
     const params = new URLSearchParams(window.location.search);
     const code = params.get("code") || "sbr";
     const fontSizeParam = parseInt(params.get("fontSize")) || 18;
+    const duration = parseInt(params.get("duration")) || 4000; // rotation duration in ms
 
     let config = null;
     let allHeadlines = [];
+    let rotateIndex = 0;
+    let refreshTimer = null;
+    const REFRESH_MS = 10 * 60 * 1000;
 
     function parsePubDate(pubDateText) {
       const match = pubDateText.match(/(\d{2})\/(\d{2})\/(\d{4})/);
@@ -91,9 +95,10 @@
       .then(c => {
         config = c;
         const site = config[code] || config["sbr"];
-        document.getElementById("site-name").textContent = site.name || "Site";
+        const siteName = site.name || "Site";
+        document.getElementById("site-name").textContent = siteName;
 
-        // Set header background color from data.json
+        // set header background color from data.json
         if (site.color) {
           document.getElementById("site-name").style.backgroundColor = site.color;
         }
@@ -138,18 +143,21 @@
         });
       }
 
-      // Sort by date descending
+      // sort by date descending
       allHeadlines = Array.from(tempMap.values()).sort((a, b) => b.date - a.date);
+      rotateIndex = 0;
 
-      // Render headlines
-      renderHeadlines();
+      // start rotation
+      showNextBatch();
+      if (refreshTimer) clearInterval(refreshTimer);
+      refreshTimer = setInterval(showNextBatch, duration);
     }
 
-    function renderHeadlines() {
+    function showNextBatch() {
       const tbody = document.getElementById("headlines-body");
       tbody.innerHTML = "";
       const numberToDisplay = 10;
-      const batch = allHeadlines.slice(0, numberToDisplay);
+      const batch = allHeadlines.slice(rotateIndex, rotateIndex + numberToDisplay);
 
       for (let i = 0; i < numberToDisplay; i++) {
         const tr = document.createElement("tr");
@@ -172,6 +180,9 @@
         tr.appendChild(td);
         tbody.appendChild(tr);
       }
+
+      rotateIndex += numberToDisplay;
+      if (rotateIndex >= allHeadlines.length) rotateIndex = 0;
     }
   </script>
 
