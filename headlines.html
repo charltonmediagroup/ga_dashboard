@@ -52,8 +52,7 @@
     }
 
     tbody tr {
-      /* Each row will take up 1/10 of the remaining height */
-      height: 10%;
+      height: 10%; /* each row takes 1/10 of tbody */
     }
   </style>
 </head>
@@ -81,7 +80,7 @@
     let allHeadlines = [];
     let rotateIndex = 0;
     let refreshTimer = null;
-    const REFRESH_MS = 10 * 60 * 1000;
+    const numberToDisplay = 15;
 
     function parsePubDate(pubDateText) {
       const match = pubDateText.match(/(\d{2})\/(\d{2})\/(\d{4})/);
@@ -95,8 +94,7 @@
       .then(c => {
         config = c;
         const site = config[code] || config["sbr"];
-        const siteName = site.name || "Site";
-        document.getElementById("site-name").textContent = siteName;
+        document.getElementById("site-name").textContent = site.name || "Site";
 
         // set header background color from data.json
         if (site.color) {
@@ -147,7 +145,6 @@
       allHeadlines = Array.from(tempMap.values()).sort((a, b) => b.date - a.date);
       rotateIndex = 0;
 
-      // start rotation
       showNextBatch();
       if (refreshTimer) clearInterval(refreshTimer);
       refreshTimer = setInterval(showNextBatch, duration);
@@ -156,7 +153,18 @@
     function showNextBatch() {
       const tbody = document.getElementById("headlines-body");
       tbody.innerHTML = "";
-      const numberToDisplay = 10;
+
+      const totalSets = Math.ceil(allHeadlines.length / numberToDisplay);
+      const currentSet = Math.floor(rotateIndex / numberToDisplay) + 1;
+
+      // update header with (current/total) if multiple sets
+      const site = config[code] || config["sbr"];
+      let headerText = site.name || "Site";
+      if (totalSets > 1) {
+        headerText += ` (${currentSet}/${totalSets})`;
+      }
+      document.getElementById("site-name").textContent = headerText;
+
       const batch = allHeadlines.slice(rotateIndex, rotateIndex + numberToDisplay);
 
       for (let i = 0; i < numberToDisplay; i++) {
