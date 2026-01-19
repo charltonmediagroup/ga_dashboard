@@ -100,5 +100,47 @@
         "showcase_id": "12018444",
         "awards_showcase_id": "12023215",
         "shorts_showcase_id": "12023205"
+    },
+    
+    "mir": {
+        "name": "Marine and Industrial Report",
+        "url": "https://marinereport.com/",
+        "inFocusUrl": "https://marinereport.com/in-focus-articles.xml"
+    },
+    
+    "rea": {
+        "name": "Real Estate Asia",
+        "url": "https://realestateasia.com/",
+        "inFocusUrl": "https://realestateasia.com/in-focus-articles.xml"
+    },
+    
+    "abr": {
+        "name": "Asian Business Review",
+        "url": "https://asianbusinessreview.com/",
+        "inFocusUrl": "https://asianbusinessreview.com/in-focus-articles.xml"
+    },
+    
+    "govmedia": {
+        "name": "Gov Media",
+        "url": "https://govmedia.com/",
+        "inFocusUrl": "https://govmedia.com/in-focus-articles.xml"
+    },
+    
+    "ma": {
+        "name": "Manufacturing Asia",
+        "url": "https://manufacturing.asia/",
+        "inFocusUrl": "https://manufacturing.asia/in-focus-articles.xml"
+    },
+    
+    "esgb": {
+        "name": "ESG Business",
+        "url": "https://esgbusiness.com/",
+        "inFocusUrl": "https://esgbusiness.com/in-focus-articles.xml"
+    },
+
+    "at": {
+        "name": "Asian Telecom",
+        "url": "https://asiantelecom.com/",
+        "inFocusUrl": "https://asiantelecom.com/in-focus-articles.xml"
     }
 }
