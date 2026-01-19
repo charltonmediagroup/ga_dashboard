@@ -105,42 +105,49 @@
     "mir": {
         "name": "Marine and Industrial Report",
         "url": "https://marinereport.com/",
-        "inFocusUrl": "https://marinereport.com/in-focus-articles.xml"
+        "inFocusUrl": "https://marinereport.com/in-focus-articles.xml",
+        "color": "#00aeed"
     },
     
     "rea": {
         "name": "Real Estate Asia",
         "url": "https://realestateasia.com/",
-        "inFocusUrl": "https://realestateasia.com/in-focus-articles.xml"
+        "inFocusUrl": "https://realestateasia.com/in-focus-articles.xml",
+        "color": "#BE1D2C"
     },
     
     "abr": {
         "name": "Asian Business Review",
         "url": "https://asianbusinessreview.com/",
-        "inFocusUrl": "https://asianbusinessreview.com/in-focus-articles.xml"
+        "inFocusUrl": "https://asianbusinessreview.com/in-focus-articles.xml",
+        "color": "#000000"
     },
     
     "govmedia": {
         "name": "Gov Media",
         "url": "https://govmedia.com/",
-        "inFocusUrl": "https://govmedia.com/in-focus-articles.xml"
+        "inFocusUrl": "https://govmedia.com/in-focus-articles.xml",
+        "color": "#002366"
     },
     
     "ma": {
         "name": "Manufacturing Asia",
         "url": "https://manufacturing.asia/",
-        "inFocusUrl": "https://manufacturing.asia/in-focus-articles.xml"
+        "inFocusUrl": "https://manufacturing.asia/in-focus-articles.xml",
+        "color": "#E93824"
     },
     
     "esgb": {
         "name": "ESG Business",
         "url": "https://esgbusiness.com/",
-        "inFocusUrl": "https://esgbusiness.com/in-focus-articles.xml"
+        "inFocusUrl": "https://esgbusiness.com/in-focus-articles.xml",
+        "color": "#228B22"
     },
 
     "at": {
         "name": "Asian Telecom",
         "url": "https://asiantelecom.com/",
-        "inFocusUrl": "https://asiantelecom.com/in-focus-articles.xml"
+        "inFocusUrl": "https://asiantelecom.com/in-focus-articles.xml",
+        "color": "#333"
     }
 }
