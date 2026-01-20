@@ -81,14 +81,17 @@
     },
     
     "ma": {
-        "name": "Manufacturing Asia"
+        "name": "Manufacturing Asia",
+        "url": "https://manufacturing.asia/"
     },
     
     "esgb": {
-        "name": "ESG Business"
+        "name": "ESG Business",
+        "url": "https://esgbusiness.com/"
     },
 
     "at": {
-        "name": "Asian Telecom"
+        "name": "Asian Telecom",
+        "url": "https://asiantelecom.com/"
     }
 }
