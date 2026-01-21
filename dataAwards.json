@@ -78,20 +78,5 @@
     "govmedia": {
         "name": "Gov Media",
         "url": "https://govmedia.com/"
-    },
-    
-    "ma": {
-        "name": "Manufacturing Asia",
-        "url": "https://manufacturing.asia/"
-    },
-    
-    "esgb": {
-        "name": "ESG Business",
-        "url": "https://esgbusiness.com/"
-    },
-
-    "at": {
-        "name": "Asian Telecom",
-        "url": "https://asiantelecom.com/"
     }
 }
