@@ -63,6 +63,11 @@
             border-radius: 2px;
         }
 
+        .fullscreen-btn {
+            cursor: pointer;
+            user-select: none;
+        }
+
         /* subtle row striping */
         .grid div:nth-child(8n+5),
         .grid div:nth-child(8n+6),
@@ -75,7 +80,9 @@
 
 <body>
     <div class="grid" id="grid">
-        <div class="header">Award Title</div>
+        <div class="header fullscreen-btn" onclick="toggleFullscreen()">
+            Award Title
+        </div>
         <div class="header">Awards Night</div>
         <div class="header">Awards Night Starts In</div>
         <div class="header">Submission Close In</div>
@@ -284,6 +291,16 @@
                 if (endTime) startCountdown(endTime, endDiv, "Submission Ended");
                 if (awardTime) startCountdown(awardTime, awardDiv, "Awards Ended");
             });
+        }
+
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(err => {
+                    console.warn("Fullscreen failed:", err);
+                });
+            } else {
+                document.exitFullscreen();
+            }
         }
 
         renderGrid();
