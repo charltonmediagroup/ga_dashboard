@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>RSS Headlines Table</title>
+
+    <style>
+        html,
+        body {
+            height: 100%;
+            margin: 0;
+            overflow: hidden;
+            font-family: Arial, sans-serif;
+            background: #f1f1f1;
+        }
+
+        table {
+            width: 100%;
+            height: 100vh;
+            border-collapse: collapse;
+            table-layout: fixed;
+            background: #fff;
+        }
+
+        thead th {
+            text-align: center;
+            font-size: 24px;
+            color: #fff;
+            padding: 10px;
+        }
+
+        tbody td {
+            padding: 8px 12px;
+            font-weight: bold;
+            word-break: break-word;
+        }
+
+        .tag {
+            font-weight: normal;
+            font-size: 0.8em;
+            color: #555;
+            margin-left: 6px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <table>
+        <thead>
+            <tr>
+                <th id="siteHeader">Loading…</th>
+            </tr>
+        </thead>
+        <tbody id="rows"></tbody>
+    </table>
+
+    <script type="module">
+        import { SaxesParser } from "https://esm.sh/saxes@6.0.0";
+
+        /* =========================
+           PARAMS
+        ========================= */
+        const params = new URLSearchParams(location.search);
+        const code = params.get("code") || "sbr";
+        const fontSize = parseInt(params.get("fontSize")) || 18;
+        const duration = parseInt(params.get("duration")) || 4000;
+        const numberToDisplay = 15;
+
+        /* =========================
+           STATE
+        ========================= */
+        let config;
+        let headlines = [];
+        let index = 0;
+        let timer;
+
+        /* =========================
+           HELPERS
+        ========================= */
+        const cutoff = new Date();
+        cutoff.setDate(cutoff.getDate() - 7); // 7 days ago
+
+        function cacheBust(url) {
+            const u = new URL(url);
+            u.searchParams.set("cb", Date.now());
+            return u.toString();
+        }
+
+        // Extract MM/DD/YYYY from custom pubDate
+        function parseDateOnly(pubDateStr) {
+            const match = pubDateStr.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+            if (!match) return null;
+            const month = parseInt(match[1], 10) - 1;
+            const day = parseInt(match[2], 10);
+            const year = parseInt(match[3], 10);
+            return new Date(year, month, day);
+        }
+
+        /* =========================
+           CONFIG
+        ========================= */
+        fetch("data.json")
+            .then(r => r.json())
+            .then(c => {
+                config = c;
+                const site = config[code] || config.sbr;
+                setupHeader(site);
+                loadFeeds(site);
+            });
+
+        /* =========================
+           HEADER
+        ========================= */
+        function setupHeader(site) {
+            const h = document.getElementById("siteHeader");
+            h.textContent = site.name;
+            if (site.color) h.style.backgroundColor = site.color;
+        }
+
+        /* =========================
+           FEED LOADER (SAX + 7-DAY FILTER)
+        ========================= */
+        async function loadFeeds(site) {
+            const feeds = [
+                { url: site.exclusivesUrl, tag: "Exclusive" },
+                { url: site.inFocusUrl, tag: "In Focus" }
+            ].filter(f => f.url);
+
+            const map = new Map();
+
+            for (const feed of feeds) {
+                const xml = await fetch(cacheBust(feed.url)).then(r => r.text());
+                let stopParsing = false;
+
+                let item = null;
+                let currentField = null;
+                let buffer = "";
+
+                const parser = new SaxesParser({ xmlns: false });
+
+                parser.on("opentag", ({ name }) => {
+                    const tag = name.toLowerCase();
+
+                    if (stopParsing) return; // ignore everything after cutoff
+
+                    if (tag === "item") {
+                        item = { title: "", date: null, tags: new Set([feed.tag]) };
+                        return;
+                    }
+
+                    if (!item) return;
+
+                    if (tag === "title" || tag === "pubdate" || tag === "dc:date" || tag === "updated") {
+                        currentField = tag;
+                        buffer = "";
+                    }
+                });
+
+                parser.on("text", txt => {
+                    if (item && currentField) {
+                        buffer += txt;
+                    }
+                });
+
+                parser.on("closetag", ({ name }) => {
+                    const tag = name.toLowerCase();
+
+                    if (!item) return;
+
+                    if (tag === "title" && currentField === "title") {
+                        item.title = buffer.trim();
+                    }
+
+                    if ((tag === "pubdate" || tag === "dc:date" || tag === "updated") && currentField === tag) {
+                        const d = parseDateOnly(buffer.trim());
+                        if (!d) return;
+                        item.date = d; // only store if within 7 days
+                        if (d < cutoff) {
+                            stopParsing = true; // set flag, don’t store further items
+                        }
+
+
+                    }
+
+                    if (tag === "item") {
+                        if (!stopParsing && item.title && item.date) {
+                            if (!map.has(item.title)) {
+                                map.set(item.title, item);
+                            } else {
+                                item.tags.forEach(t => map.get(item.title).tags.add(t));
+                            }
+                        }
+                        item = null;
+                    }
+
+                    if (tag === currentField) {
+                        currentField = null;
+                        buffer = "";
+                    }
+                });
+
+                parser.write(xml);
+                parser.close();
+            }
+
+            // Sort newest first
+            headlines = [...map.values()].sort((a, b) => b.date - a.date);
+            index = 0;
+
+            render();
+            clearInterval(timer);
+            timer = setInterval(render, duration);
+        }
+
+        /* =========================
+           RENDER
+        ========================= */
+        function render() {
+            const tbody = document.getElementById("rows");
+            tbody.innerHTML = "";
+
+            const batch = headlines.slice(index, index + numberToDisplay);
+            const rowHeight = 100 / numberToDisplay + "%";
+
+            for (let i = 0; i < numberToDisplay; i++) {
+                const tr = document.createElement("tr");
+                tr.style.height = rowHeight;
+
+                const td = document.createElement("td");
+                td.style.fontSize = fontSize + "px";
+
+                if (batch[i]) {
+                    td.textContent = batch[i].title;
+                    const span = document.createElement("span");
+                    span.className = "tag";
+                    span.textContent = " (" + [...batch[i].tags].join(" & ") + ")";
+                    td.appendChild(span);
+                } else {
+                    td.innerHTML = "&nbsp;";
+                }
+
+                tr.appendChild(td);
+                tbody.appendChild(tr);
+            }
+
+            index += numberToDisplay;
+            if (index >= headlines.length) index = 0;
+        }
+    </script>
+
+</body>
+
+</html>
