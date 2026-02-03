@@ -2,139 +2,147 @@
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Awards Countdown Grid</title>
-
     <style>
-        html,
-        body {
-            height: 100%;
-            margin: 0;
-        }
-
         body {
             font-family: Arial, sans-serif;
-            font-size: 13px;
-            overflow: hidden;
+            margin: 0;
+            padding: 0;
         }
 
         .grid {
-            height: 100%;
-            width: 100%;
+            width: 100vw;
+            height: 100vh;
+            max-width: 1400px;
+            margin: 0 auto;
             display: grid;
-            grid-template-columns: 3fr 1fr 1fr 1fr;
-            gap: 4px;
-            padding: 4px;
-            box-sizing: border-box;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 16px;
+            align-items: start;
         }
 
-        .header {
-            font-weight: bold;
-            text-align: center;
-            background: #eee;
-            padding: 4px;
-            border-radius: 2px;
-            font-size: 14px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+        .card {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            text-align: left;
         }
 
         .block {
+            text-align: left;
+            font-size: 15px;
+        }
+
+        .block .label {
+            font-weight: 600;
+        }
+
+        .block .value {
+            margin-top: 2px;
+            font-weight: normal;
+        }
+
+        .img-wrap {
+            width: 100%;
             display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 2px 4px;
-            font-size: 12px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .title {
             justify-content: flex-start;
-            padding-left: 6px;
+            align-items: flex-start;
+            overflow: visible;
         }
 
-        /* subtle row striping */
-        .grid div:nth-child(8n+5),
-        .grid div:nth-child(8n+6),
-        .grid div:nth-child(8n+7),
-        .grid div:nth-child(8n+8) {
-            background: #fafafa;
+        .img-wrap img {
+            max-width: min(100%, 500px);
+            max-height: min(180px, 40vh);
+            height: auto;
         }
     </style>
 </head>
 
 <body>
-    <div class="grid" id="grid">
-        <div class="header">Award Title</div>
-        <div class="header">Submission Start</div>
-        <div class="header">Submission End</div>
-        <div class="header">Award Date</div>
-    </div>
-
+    <div class="grid" id="grid"></div>
     <script>
-        /* -------------------- params -------------------- */
-        const params = new URLSearchParams(window.location.search);
-        const fontSize = params.get("font-size") || "12px";
-        const halfParam = params.get("half");
+        /* =============================
+           CONFIG – PUT YOUR URL HERE
+        ============================== */
+        const SITE_URL = "https://qsrmedia.com.au/"; // <-- CHANGE THIS
 
-        /* -------------------- utils -------------------- */
-        function decodeHtml(str = "") {
-            const t = document.createElement("textarea");
-            t.innerHTML = str;
-            return t.value;
-        }
+        const image_size = 100;
+        const font_size = "25px";
 
-        function startCountdown(targetDate, el, doneText) {
-            const target = new Date(targetDate).getTime();
+        function startCountdown(dateString, el, doneText) {
+            const target = new Date(dateString).getTime();
             if (isNaN(target)) {
-                el.textContent = doneText;
+                el.querySelector(".value").textContent = doneText;
                 return;
             }
 
             function tick() {
                 const diff = target - Date.now();
+                const valueEl = el.querySelector(".value");
+
                 if (diff <= 0) {
-                    el.textContent = doneText;
+                    valueEl.textContent = doneText;
                     return;
                 }
 
-                const d = Math.floor(diff / 86400000);
-                const h = Math.floor(diff / 3600000) % 24;
-                const m = Math.floor(diff / 60000) % 60;
-                const s = Math.floor(diff / 1000) % 60;
+                const d = Math.floor(diff / 86400000),
+                    h = Math.floor(diff / 3600000) % 24,
+                    m = Math.floor(diff / 60000) % 60,
+                    s = Math.floor(diff / 1000) % 60;
 
-                el.textContent = `${d}d ${h}h ${m}m ${s}s`;
+                valueEl.textContent = `${d}d ${h}h ${m}m ${s}s`;
                 setTimeout(tick, 1000 - (Date.now() % 1000));
             }
 
             tick();
         }
 
-        /* -------------------- data loading -------------------- */
-        async function loadAllAwards() {
-            const config = await fetch("dataAwards.json").then(r => r.json());
+        async function loadAwards() {
+            const awards = await fetch(
+                SITE_URL + "/node/content-menu/awards.json?cache=false"
+            ).then(r => r.json());
 
-            const requests = Object.values(config)
-                .filter(site => site?.url)
-                .map(site =>
-                    fetch(site.url + "/node/content-menu/awards.json?cache=false")
-                        .then(r => r.json())
-                        .catch(() => [])
-                );
+            return { siteUrl: SITE_URL, awards };
+        }
 
-            const results = await Promise.all(requests);
-            return results.flat();
+        async function fetchAwardImagesMap(siteUrl) {
+            try {
+                const html = await fetch(`${siteUrl}/awards`).then(r => r.text());
+                const doc = new DOMParser().parseFromString(html, "text/html");
+                const items = Array.from(doc.querySelectorAll('.view-content .item.with-border-bottom'));
+                const map = {};
+
+                items.forEach(item => {
+                    const linkEl = item.querySelector('.item__title a');
+                    const imgEl = item.querySelector('img.lazyload, img.lazyloaded');
+                    if (linkEl && imgEl) {
+                        const url = linkEl.href.trim();
+                        const title = linkEl.textContent.trim();
+                        const imgUrl =
+                            imgEl.getAttribute('data-srcset')?.split(' ')[0] || imgEl.src;
+                        map[url] = { imgUrl, title };
+                    }
+                });
+
+                return map;
+            } catch (e) {
+                console.warn("Failed to fetch award images map:", e);
+                return {};
+            }
         }
 
         async function fetchNodeDate(url, selector) {
             try {
                 const html = await fetch(url).then(r => r.text());
                 const doc = new DOMParser().parseFromString(html, "text/html");
-                const el = doc.querySelector(selector);
+                const nominationEl = doc.querySelector("div.nomination-date");
+                if (!nominationEl) return null;
+
+                const el = nominationEl.querySelector(
+                    selector.replace("div.nomination-date", "")
+                );
                 const raw = el?.getAttribute("date");
                 return raw ? new Date(raw).toISOString() : null;
             } catch {
@@ -142,62 +150,85 @@
             }
         }
 
-        async function enrichAward(award) {
-            const [startDate, endDate] = await Promise.all([
-                fetchNodeDate(award.view_node, "div.date.start-date"),
-                fetchNodeDate(award.view_node, "div.date.end-date")
-            ]);
-
-            return { ...award, startDate, endDate };
+        async function fetchNominationDates(award) {
+            try {
+                const [startDate, endDate] = await Promise.all([
+                    fetchNodeDate(award.view_node, "div.nomination-date div.date.start-date"),
+                    fetchNodeDate(award.view_node, "div.nomination-date div.date.end-date")
+                ]);
+                return { ...award, startDate, endDate };
+            } catch {
+                return { ...award, startDate: null, endDate: null };
+            }
         }
 
-        /* -------------------- render -------------------- */
         async function renderGrid() {
             const grid = document.getElementById("grid");
-            let awards = await loadAllAwards();
+            const { siteUrl, awards: rawAwards } = await loadAwards();
+            const imageMap = await fetchAwardImagesMap(siteUrl);
 
-            awards = await Promise.all(awards.map(enrichAward));
+            const awards = await Promise.all(
+                rawAwards.map(async award => {
+                    const data = await fetchNominationDates(award);
+                    const imgData =
+                        imageMap[award.view_node] ||
+                        Object.values(imageMap).find(x => x.title === award.title);
+
+                    data.imgUrl = imgData?.imgUrl || "";
+                    return data;
+                })
+            );
+
             awards.sort((a, b) => new Date(a.field_date) - new Date(b.field_date));
 
-            if (halfParam === "first" || halfParam === "second") {
-                const mid = Math.ceil(awards.length / 2);
-                awards = halfParam === "first"
-                    ? awards.slice(0, mid)
-                    : awards.slice(mid);
-            }
-
-            const now = Date.now();
-
             awards.forEach(award => {
-                const startTime = award.startDate && new Date(award.startDate).getTime();
-                const endTime = award.endDate && new Date(award.endDate).getTime();
-                const awardTime = award.field_date && new Date(award.field_date).getTime();
+                const card = document.createElement("div");
+                card.className = "card";
 
-                const titleDiv = document.createElement("div");
-                titleDiv.className = "block title";
-                titleDiv.style.fontSize = fontSize;
-                titleDiv.textContent = decodeHtml(award.title);
+                function createBlock(labelText) {
+                    const block = document.createElement("div");
+                    block.className = "block";
+                    block.style.fontSize = font_size;
 
-                const startDiv = document.createElement("div");
-                startDiv.className = "block";
-                startDiv.style.fontSize = fontSize;
-                startDiv.textContent = "Submission Start";
+                    const label = document.createElement("div");
+                    label.className = "label";
+                    label.textContent = labelText;
 
-                const endDiv = document.createElement("div");
-                endDiv.className = "block";
-                endDiv.style.fontSize = fontSize;
-                endDiv.textContent = "Submission End";
+                    const value = document.createElement("div");
+                    value.className = "value";
 
-                const awardDiv = document.createElement("div");
-                awardDiv.className = "block";
-                awardDiv.style.fontSize = fontSize;
-                awardDiv.textContent = "Award Date";
+                    block.appendChild(label);
+                    block.appendChild(value);
+                    return block;
+                }
 
-                grid.append(titleDiv, startDiv, endDiv, awardDiv);
+                const imgWrap = document.createElement("div");
+                imgWrap.className = "img-wrap";
 
-                if (startTime) startCountdown(startTime, startDiv, "Submission Started");
-                if (endTime) startCountdown(endTime, endDiv, "Submission Ended");
-                if (awardTime) startCountdown(awardTime, awardDiv, "Awards Ended");
+                const img = document.createElement("img");
+                img.src = award.imgUrl;
+                img.alt = award.title;
+                img.style.maxWidth = image_size + "%";
+                img.style.height = "auto";
+
+                imgWrap.appendChild(img);
+
+                const startBlock = createBlock("Nomination Opens:");
+                const endBlock = createBlock("Nomination Closes:");
+                const awardBlock = createBlock("Awards Presentation:");
+
+                card.appendChild(imgWrap);
+                card.appendChild(startBlock);
+                card.appendChild(endBlock);
+                card.appendChild(awardBlock);
+                grid.appendChild(card);
+
+                if (award.startDate)
+                    startCountdown(award.startDate, startBlock, "Nomination Opened");
+                if (award.endDate)
+                    startCountdown(award.endDate, endBlock, "Nomination Closed");
+                if (award.field_date)
+                    startCountdown(award.field_date, awardBlock, "Awards Presentation Finished");
             });
         }
 
